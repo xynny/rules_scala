@@ -103,13 +103,9 @@ def _compile_zinc(ctx, jars):
     "-scala-extra", ctx.file._scala_reflect_jar.path,
     "-sbt-interface", ctx.file._sbt_interface_jar.path,
     "-compiler-interface", ctx.file._compiler_interface_jar.path,
-    "-cp {jars}",
+    "-cp {jars}".format(jars=":".join([j.path for j in jars])),
     "-d", tmp_out_dir.path,
   ]
-  flags = " ".join(flags)
-  flags = flags.format(
-      out=ctx.outputs.jar.path,
-      jars=":".join([j.path for j in jars]))
 
   # Classpath for the compiler/worker itself, these are not the compile time dependencies.
   classpath_jars = [
