@@ -193,9 +193,10 @@ object ScalaWorker {
         if (poisoned) {
           System.out.println("I'm a poisoned worker and this is not a protobuf.")
         } else {
+          val pwd = new File(System.getProperty("user.dir"))
           val inputs = request.getInputsList().asScala.mkString("\n")
           WorkResponse.newBuilder()
-            .setOutput(baos.toString() + inputs)
+            .setOutput(baos.toString() + s"\n$pwd\n" + inputs)
             .setExitCode(exitCode)
             .build()
             .writeDelimitedTo(System.out)
