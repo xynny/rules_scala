@@ -92,7 +92,73 @@ touch -t 198001010000 {manifest}
       arguments=[f.path for f in ctx.files.srcs])
 
 def _compile_zinc(ctx, jars):
-  return None
+  worker = ctx.executable.worker
+
+  tmp_out_dir = ctx.new_file(ctx.outputs.jar.path + "_tmp")
+
+  flags = [
+    "-fork-java",
+    "-scala-compiler", ctx.file._scala_compiler_jar.path,
+    "-scala-library", ctx.file._scala_library_jar.path,
+    "-scala-extra", ctx.file._scala_reflect_jar.path,
+    "-sbt-interface", ctx.file._sbt_interface_jar.path,
+    "-compiler-interface", ctx.file._compiler_interface_jar.path,
+    "-cp {jars}",
+    "-d", tmp_out_dir.path,
+  ]
+  flags = " ".join(flags)
+  flags = flags.format(
+      out=ctx.outputs.jar.path,
+      jars=":".join([j.path for j in jars]))
+  work_unit_args = ctx.new_file(ctx.configuration.bin_dir, ctx.label.name + "_args")
+  ctx.file_action(output = work_unit_args, content=flags)
+
+  # Generate the "@"-file containing the command-line args for the unit of work.
+  argfile = ctx.new_file(ctx.configuration.bin_dir, "worker_input")
+  argfile_contents = "\n".join(["-argfile", work_unit_args.path] + [f.path for f in ctx.files.srcs])
+  ctx.file_action(output=argfile, content=argfile_contents)
+
+  # Classpath for the compiler/worker itself, these are not the compile time dependencies.
+  classpath_jars = [
+      ctx.file._compiler_interface_jar,
+      ctx.file._incremental_compiler_jar,
+      ctx.file._scala_compiler_jar,
+      ctx.file._scala_library_jar,
+      ctx.file._scala_reflect_jar,
+      ctx.file._sbt_interface_jar,
+      ctx.file._zinc,
+      ctx.file._zinc_compiler_jar,
+      ctx.file._nailgun_server_jar,
+  ]
+  compiler_classpath = ":".join([f.path for f in classpath_jars])
+
+  ctx.action(
+      inputs=list(jars) + ctx.files.srcs + [ctx.outputs.manifest, argfile, work_unit_args] + classpath_jars,
+      outputs=[tmp_out_dir],
+      executable=worker,
+      progress_message="Zinc Worker: %s" % ctx.label.name,
+      mnemonic="Scala",
+      arguments=ctx.attr.worker_args + [compiler_classpath] + ["@" + argfile.path],
+  )
+
+  cmd = """
+set -e
+# Make jar file deterministic by setting the timestamp of files
+find {tmp_out} | xargs touch -t 198001010000
+touch -t 198001010000 {manifest}
+jar cmf {manifest} {out} -C {tmp_out} .
+""" + _get_res_cmd(ctx)
+  cmd = cmd.format(
+      tmp_out=tmp_out_dir.path,
+      out=ctx.outputs.jar.path,
+      manifest=ctx.outputs.manifest.path)
+
+  ctx.action(
+      inputs=[tmp_out_dir, ctx.outputs.manifest],
+      outputs=[ctx.outputs.jar],
+      command=cmd,
+      progress_message="Building Jar: %s" % ctx.label)
+
 
 def _get_res_cmd(ctx):
   res_cmd = ""
@@ -242,6 +308,9 @@ def _lib(ctx, non_macro_lib, usezinc):
 def _scala_library_impl(ctx):
   return _lib(ctx, True, usezinc = False)
 
+def _scala_worker_impl(ctx):
+  return _lib(ctx, True, usezinc = True)
+
 def _scala_macro_library_impl(ctx):
   return _lib(ctx, False, usezinc = False)  # don't build the ijar for macros
 
@@ -298,6 +367,67 @@ _common_attrs = {
   "scalacopts":attr.string_list(),
   "jvm_flags": attr.string_list(),
 }
+
+_zinc_compile_attrs = {
+  "_zinc": attr.label(
+      default=Label("@zinc//file"),
+      executable=True,
+      single_file=True,
+      allow_files=True),
+  "_zinc_compiler_jar": attr.label(
+      default=Label("@zinc_0_3_10_SNAPSHOT_jar//jar"),
+      single_file=True,
+      allow_files=True),
+  "_scala_compiler_jar": attr.label(
+      default=Label("@scala_compiler_jar//jar"),
+      single_file=True,
+      allow_files=True),
+  "_incremental_compiler_jar": attr.label(
+      default=Label("@incremental_compiler_0_13_9_jar//jar"),
+      single_file=True,
+      allow_files=True),
+  "_scala_library_jar": attr.label(
+      default=Label("@scala_library_jar//jar"),
+      single_file=True,
+      allow_files=True),
+  "_scala_reflect_jar": attr.label(
+      default=Label("@scala_reflect_jar//jar"),
+      single_file=True,
+      allow_files=True),
+  "_sbt_interface_jar": attr.label(
+      default=Label("@sbt_interface_0_13_9_jar//jar"),
+      single_file=True,
+      allow_files=True),
+  "_compiler_interface_jar": attr.label(
+      default=Label("@compiler_interface_0_13_9_sources_jar//jar"),
+      single_file=True,
+      allow_files=True),
+  "_nailgun_server_jar": attr.label(
+      default=Label("@nailgun_server_0_9_1_jar//jar"),
+      single_file=True,
+      allow_files=True),
+
+}
+
+scala_worker = rule(
+  implementation=_scala_worker_impl,
+  attrs={
+      "main_class": attr.string(),
+      "exports": attr.label_list(allow_files=False),
+      # Worker Args
+      "worker": attr.label(
+          cfg=HOST_CFG,
+          default=Label(":scala-worker"),
+          allow_files=True,
+          executable=True),
+      "worker_args": attr.string_list(),
+      } + _implicit_deps + _common_attrs + _zinc_compile_attrs,
+  outputs={
+      "jar": "%{name}_deploy.jar",
+      "ijar": "%{name}_ijar.jar",
+      "manifest": "%{name}_MANIFEST.MF",
+      },
+)
 
 scala_library = rule(
   implementation=_scala_library_impl,
