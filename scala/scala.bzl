@@ -560,3 +560,58 @@ def scala_2_10_repositories():
     build_file_content = SCALA_2_10_BUILD_FILE,
   )
 
+def zinc_repositories():
+  native.http_file(
+    name = "zinc",
+    url = "https://databricks-mvn.s3.amazonaws.com/binaries/zinc/12-29-15/zinc?AWSAccessKeyId=AKIAJ6V3VSHTA5RSYEQA&Expires=1482970631&Signature=tAP2QKWEnte6v3DpRFtAxGNkUps%3D",
+    sha256 = "255cbd2acb9e78ac30d20d3b57ba6fc4a38476b4eaa74173ba28c2839b4549df"
+  )
+
+  native.http_jar(
+    name = "scala_compiler_jar",
+    url = "https://databricks-mvn.s3.amazonaws.com/binaries/zinc/12-29-15/scala-compiler.jar?AWSAccessKeyId=AKIAJ6V3VSHTA5RSYEQA&Expires=1482962357&Signature=zDYAnLusbKWFFyhI3jokN%2FxissM%3D",
+    sha256 = "7ceaacf9b279b0e53c49234709623f55f6ce61613f14183a817e91e870da6bc8"
+  )
+
+  native.http_jar(
+    name = "incremental_compiler_0_13_9_jar",
+    url = "https://databricks-mvn.s3.amazonaws.com/binaries/zinc/12-29-15/incremental-compiler-0.13.9.jar?AWSAccessKeyId=AKIAJ6V3VSHTA5RSYEQA&Expires=1482971670&Signature=usTDvNkRldp8FSFys%2Fm0zKy0aHg%3D",
+    sha256 = "ddfbc88b9dd629118cad135ec32ec6cd1bc9969ca406cb780529a8cb037e1134"
+  )
+
+  native.http_jar(
+    name = "scala_library_jar",
+    url = "https://databricks-mvn.s3.amazonaws.com/binaries/zinc/12-29-15/scala-library.jar?AWSAccessKeyId=AKIAJ6V3VSHTA5RSYEQA&Expires=1482962357&Signature=fS5ZliC81RaOCArtLERGLOaCS2U%3D",
+    sha256 = "2aa6d7e5bb277c4072ac04433b9626aab586a313a41a57e192ea2acf430cdc29"
+  )
+
+  native.http_jar(
+    name = "sbt_interface_0_13_9_jar",
+    url = "https://databricks-mvn.s3.amazonaws.com/binaries/zinc/12-29-15/sbt-interface-0.13.9.jar?AWSAccessKeyId=AKIAJ6V3VSHTA5RSYEQA&Expires=1482962357&Signature=uu9taX3NAXzcieiTgcjFSOKqBVM%3D",
+    sha256 = "8004c0089728819896d678b3056b0ad0308e9760cb584b3cfc8eabde88f4e2bf"
+  )
+
+  native.http_jar(
+    name = "compiler_interface_0_13_9_sources_jar",
+    url = "https://databricks-mvn.s3.amazonaws.com/binaries/zinc/12-29-15/compiler-interface-0.13.9-sources.jar?AWSAccessKeyId=AKIAJ6V3VSHTA5RSYEQA&Expires=1482962357&Signature=bdNIS9%2BhpySfYIa7V9%2ByceDUClA%3D",
+    sha256 = "d124212ca6d83abe7ef4a275f545a2ac1d3fc8a43ac49d5e2a40054783062127"
+  )
+
+  native.http_jar(
+    name = "scala_reflect_jar",
+    url = "https://databricks-mvn.s3.amazonaws.com/binaries/zinc/12-29-15/scala-reflect.jar?AWSAccessKeyId=AKIAJ6V3VSHTA5RSYEQA&Expires=1482962357&Signature=btywJi2tZAudjoCVlMyjagDbQ2o%3D",
+    sha256 = "ad9b8ec8f7cb6a1d68d3b50a5d6cc61143b783f85523122871d98bac20dd48e3"
+  )
+
+  native.http_jar(
+    name = "zinc_0_3_10_SNAPSHOT_jar",
+    url = "https://databricks-mvn.s3.amazonaws.com/binaries/zinc/12-29-15/zinc-0.3.10-SNAPSHOT.jar?AWSAccessKeyId=AKIAJ6V3VSHTA5RSYEQA&Expires=1482968757&Signature=5mojfgtEVjsYUgoVWX54QSiUIu8%3D",
+    sha256 = "1db98ace1e69a7b7f757f7726e494816583ed44ca46ccd3ed11563772dacb915"
+  )
+
+  native.http_jar(
+    name = "nailgun_server_0_9_1_jar",
+    url = "http://central.maven.org/maven2/com/martiansoftware/nailgun-server/0.9.1/nailgun-server-0.9.1.jar",
+    sha256 = "4518faa6bf4bd26fccdc4d85e1625dc679381a08d56872d8ad12151dda9cef25"
+  )
+
