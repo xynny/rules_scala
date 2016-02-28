@@ -194,7 +194,7 @@ object ScalaWorker {
           System.out.println("I'm a poisoned worker and this is not a protobuf.")
         } else {
           WorkResponse.newBuilder()
-            .setOutput(baos.toString())
+            .setOutput(baos.toString() + System.getProperty("user.dir"))
             .setExitCode(exitCode)
             .build()
             .writeDelimitedTo(System.out)
