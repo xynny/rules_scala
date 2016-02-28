@@ -96,6 +96,7 @@ def _compile_zinc(ctx, jars):
 
   tmp_out_dir = ctx.new_file(ctx.outputs.jar.path + "_tmp")
 
+  jars = ":".join([j.path for j in jars])
   flags = [
     "-fork-java",
     "-scala-compiler", ctx.file._scala_compiler_jar.path,
@@ -103,7 +104,7 @@ def _compile_zinc(ctx, jars):
     "-scala-extra", ctx.file._scala_reflect_jar.path,
     "-sbt-interface", ctx.file._sbt_interface_jar.path,
     "-compiler-interface", ctx.file._compiler_interface_jar.path,
-    "-cp {jars}".format(jars=":".join([j.path for j in jars])),
+    "-cp", jars,
     "-d", tmp_out_dir.path,
   ]
 
