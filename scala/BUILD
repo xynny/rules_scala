@@ -1,7 +1,9 @@
-load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library")
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_binary")
 
-scala_library(
-    name = "scala-worker-lib",
+scala_binary(
+    name = "scala-worker",
+    visibility = ["//visibility:public"],
+    main_class = "com.databricks.bazel.ScalaWorker",
     srcs = glob(["ScalaWorker.scala"]),
     deps = [
         "@bazel_tools//src/main/protobuf:worker_protocol_proto",
@@ -14,12 +16,5 @@ scala_library(
         "@compiler_interface_0_13_9_sources_jar//jar",
         "@nailgun_server_0_9_1_jar//jar",
     ],
-)
-
-java_binary(
-    name = "scala-worker",
-    main_class = "com.databricks.bazel.ScalaWorker",
-    visibility = ["//visibility:public"],
-    runtime_deps = ["scala-worker-lib_deploy.jar"],
 )
 
