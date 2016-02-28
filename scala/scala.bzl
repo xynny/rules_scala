@@ -126,7 +126,7 @@ def _compile_zinc(ctx, jars):
   compiler_classpath = ":".join([f.path for f in classpath_jars])
 
   ctx.action(
-      inputs=list(jars) + ctx.files.srcs + [ctx.outputs.manifest, argfile] + classpath_jars,
+      inputs=list(jars) + ctx.files.srcs + [ctx.outputs.manifest] + classpath_jars,
       outputs=[tmp_out_dir],
       executable=worker,
       progress_message="Zinc Worker: %s" % ctx.label.name,
