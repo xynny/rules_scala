@@ -110,13 +110,6 @@ def _compile_zinc(ctx, jars):
   flags = flags.format(
       out=ctx.outputs.jar.path,
       jars=":".join([j.path for j in jars]))
-  work_unit_args = ctx.new_file(ctx.configuration.bin_dir, ctx.label.name + "_args")
-  ctx.file_action(output = work_unit_args, content=flags)
-
-  # Generate the "@"-file containing the command-line args for the unit of work.
-  argfile = ctx.new_file(ctx.configuration.bin_dir, "worker_input")
-  argfile_contents = "\n".join(["-argfile", work_unit_args.path] + [f.path for f in ctx.files.srcs])
-  ctx.file_action(output=argfile, content=argfile_contents)
 
   # Classpath for the compiler/worker itself, these are not the compile time dependencies.
   classpath_jars = [
@@ -133,12 +126,12 @@ def _compile_zinc(ctx, jars):
   compiler_classpath = ":".join([f.path for f in classpath_jars])
 
   ctx.action(
-      inputs=list(jars) + ctx.files.srcs + [ctx.outputs.manifest, argfile, work_unit_args] + classpath_jars,
+      inputs=list(jars) + ctx.files.srcs + [ctx.outputs.manifest, argfile] + classpath_jars,
       outputs=[tmp_out_dir],
       executable=worker,
       progress_message="Zinc Worker: %s" % ctx.label.name,
       mnemonic="Scala",
-      arguments=ctx.attr.worker_args + [compiler_classpath] + ["@" + argfile.path],
+      arguments=ctx.attr.worker_args + [compiler_classpath] + flags,
   )
 
   cmd = """
