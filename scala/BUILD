@@ -5,7 +5,7 @@ java_binary(
     main_class = "com.databricks.bazel.ScalaWorker",
     visibility = ["//visibility:public"],
     runtime_deps = [
-        ":scala-worker-lib-import"
+        ":scala-worker-lib-import",
         "@bazel_tools//src/main/protobuf:worker_protocol_proto",
         "@zinc_0_3_10_SNAPSHOT_jar//jar",
         "@scala_compiler_jar//jar",
