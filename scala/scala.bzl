@@ -417,7 +417,7 @@ scala_worker = rule(
       # Worker Args
       "worker": attr.label(
           cfg=HOST_CFG,
-          default=Label(":scala-worker"),
+          default=Label("scala-worker"),
           allow_files=True,
           executable=True),
       "worker_args": attr.string_list(),
