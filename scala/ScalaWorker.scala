@@ -196,7 +196,7 @@ object ScalaWorker {
           val pwd = new File(System.getProperty("user.dir"))
           val inputs = request.getInputsList().asScala.mkString("\n")
           WorkResponse.newBuilder()
-            .setOutput(baos.toString() + s"\n$pwd\n" + s"\n${new File(".")}\n" + inputs)
+            .setOutput(baos.toString() + s"\n$pwd\n" + s"\n${new File(".").getAbsolutePath}\n" + inputs)
             .setExitCode(exitCode)
             .build()
             .writeDelimitedTo(System.out)
