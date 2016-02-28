@@ -132,11 +132,6 @@ def _compile_zinc(ctx, jars):
   ]
   compiler_classpath = ":".join([f.path for f in classpath_jars])
 
-  print(argfile)
-  print(argfile.path)
-  print(work_unit_args)
-  print(work_unit_args.path)
-
   ctx.action(
       inputs=list(jars) + ctx.files.srcs + [ctx.outputs.manifest, argfile, work_unit_args] + classpath_jars,
       outputs=[tmp_out_dir],
