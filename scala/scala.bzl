@@ -381,6 +381,31 @@ filegroup(
 )
 """
 
+SCALA_2_10_BUILD_FILE = """
+# scala.BUILD
+exports_files([
+  "bin/scala",
+  "bin/scalac",
+  "bin/scaladoc",
+  "lib/akka-actors.jar",
+  "lib/jline.jar",
+  "lib/scala-actors-migration.jar",
+  "lib/scala-actors.jar",
+  "lib/scala-compiler.jar",
+  "lib/scala-library.jar",
+  "lib/scala-reflect.jar",
+  "lib/scala-swing.jar",
+  "lib/scalap.jar",
+  "lib/typesafe-config.jar",
+])
+
+filegroup(
+    name = "sdk",
+    srcs = glob(["**"]),
+    visibility = ["//visibility:public"],
+)
+"""
+
 def scala_repositories():
   native.new_http_archive(
     name = "scala",
@@ -394,3 +419,13 @@ def scala_repositories():
     url = "https://oss.sonatype.org/content/groups/public/org/scalatest/scalatest_2.11/2.2.6/scalatest_2.11-2.2.6.jar",
     sha256 = "f198967436a5e7a69cfd182902adcfbcb9f2e41b349e1a5c8881a2407f615962",
   )
+
+def scala_2_10_repositories():
+  native.new_http_archive(
+    name = "scala",
+    strip_prefix = "scala-2.10.6",
+    sha256 = "54adf583dae6734d66328cafa26d9fa03b8c4cf607e27b9f3915f96e9bcd2d67",
+    url = "https://downloads.lightbend.com/scala/2.10.6/scala-2.10.6.tgz",
+    build_file_content = SCALA_2_10_BUILD_FILE,
+  )
+
