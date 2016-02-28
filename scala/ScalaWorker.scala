@@ -193,7 +193,7 @@ object ScalaWorker {
         if (poisoned) {
           System.out.println("I'm a poisoned worker and this is not a protobuf.")
         } else {
-          val inputs = request.getInputList.asScala.mkString("\n")
+          val inputs = request.getInputs.asScala.mkString("\n")
           WorkResponse.newBuilder()
             .setOutput(baos.toString() + inputs)
             .setExitCode(exitCode)
