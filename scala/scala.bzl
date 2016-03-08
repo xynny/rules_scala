@@ -15,7 +15,7 @@
 """Rules for supporting the Scala language."""
 
 
-_scala_filetype = FileType([".scala", ".srcjar"])
+_scala_filetype = FileType([".scala", ".srcjar", ".java"])
 
 def _adjust_resources_path(path):
   dir_1, dir_2, rel_path = path.partition("resources")
