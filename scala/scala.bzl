@@ -260,6 +260,7 @@ def _collect_jars(targets):
   runtime_jars = set()  # this is transitive
   for target in targets:
     found = False
+    print(target)
     if hasattr(target, "scala"):
       compile_jars += [target.scala.outputs.ijar]
       compile_jars += target.scala.transitive_compile_exports
