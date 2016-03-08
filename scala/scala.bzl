@@ -154,7 +154,11 @@ set -e
 find {tmp_out} | xargs touch -t 198001010000
 touch -t 198001010000 {manifest}
 # jar cmf {manifest} {out} -C {tmp_out} .
-find {tmp_out} | sort | xargs zip -X -q {out} {manifest}
+pushd {tmp_out}
+find . | sort | xargs -n 1 -IREPLACE echo REPLACE >> filelist.txt
+zip -X -q out.jar -@ < filelist.txt
+popd
+mv {tmp_out}/out.jar {out}
 """ + _get_res_cmd(ctx)
   cmd = cmd.format(
       tmp_out=tmp_out_dir.path,
