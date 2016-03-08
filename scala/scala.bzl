@@ -72,6 +72,7 @@ touch -t 198001010000 {manifest}
 # {jar} cmf {manifest} {out} -C {out}_tmp .
 echo {manifest} >> filelist.txt
 find {out}_tmp | sort | xargs -n 1 -IREPLACE echo REPLACE >> filelist.txt
+cat filelist.txt
 zip -X -q {out} -@ < filelist.txt
 """ + _get_res_cmd(ctx)
   cmd = cmd.format(
