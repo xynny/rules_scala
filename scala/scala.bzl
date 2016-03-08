@@ -155,7 +155,7 @@ find {tmp_out} | sort | xargs zip -X -q {out} {manifest} {a}
   cmd = cmd.format(
       tmp_out=tmp_out_dir.path,
       out=ctx.outputs.jar.path,
-      a="{}"
+      a="{}",
       manifest=ctx.outputs.manifest.path)
 
   ctx.action(
