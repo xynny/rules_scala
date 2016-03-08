@@ -70,7 +70,7 @@ mkdir -p {out}_tmp
 find {out}_tmp -exec touch -t 198001010000 {{}} \;
 touch -t 198001010000 {manifest}
 # {jar} cmf {manifest} {out} -C {out}_tmp .
-find {out}_tmp | sort | xargs zip -X -q {out} {manifest} {}
+find {out}_tmp | sort | xargs zip -X -q {out} {manifest} {a}
 """ + _get_res_cmd(ctx)
   cmd = cmd.format(
       scalac=ctx.file._scalac.path,
@@ -79,6 +79,7 @@ find {out}_tmp | sort | xargs zip -X -q {out} {manifest} {}
       out=ctx.outputs.jar.path,
       manifest=ctx.outputs.manifest.path,
       jar=ctx.file._jar.path,
+      a="{}",
       jars=":".join([j.path for j in jars]),)
 
   ctx.action(
@@ -149,11 +150,12 @@ set -e
 find {tmp_out} | xargs touch -t 198001010000
 touch -t 198001010000 {manifest}
 # jar cmf {manifest} {out} -C {tmp_out} .
-find {tmp_out} | sort | xargs zip -X -q {out} {manifest} {}
+find {tmp_out} | sort | xargs zip -X -q {out} {manifest} {a}
 """ + _get_res_cmd(ctx)
   cmd = cmd.format(
       tmp_out=tmp_out_dir.path,
       out=ctx.outputs.jar.path,
+      a="{}"
       manifest=ctx.outputs.manifest.path)
 
   ctx.action(
