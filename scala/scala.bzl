@@ -262,20 +262,17 @@ def _collect_jars(targets):
     found = False
     print(target)
     if hasattr(target, "scala"):
-      print("scala")
-      print(target.scala.transitive_compile_exports)
       compile_jars += [target.scala.outputs.ijar]
       compile_jars += target.scala.transitive_compile_exports
       runtime_jars += target.scala.transitive_runtime_deps
       runtime_jars += target.scala.transitive_runtime_exports
       found = True
     if hasattr(target, "java"):
-      print("java")
-      print(target.java.transitive_deps)
       # see JavaSkylarkApiProvider.java, this is just the compile-time deps
       # this should be improved in bazel 0.1.5 to get outputs.ijar
       # compile_jars += [target.java.outputs.ijar]
-      compile_jars += target.java.transitive_deps
+      # compile_jars += target.java.transitive_deps
+      compile_jars += target.java.transitive_runtime_deps
       runtime_jars += target.java.transitive_runtime_deps
       found = True
     if not found:
