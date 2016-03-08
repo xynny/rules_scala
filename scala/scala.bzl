@@ -73,6 +73,7 @@ touch -t 198001010000 {manifest}
 # echo {manifest} >> filelist.txt
 pushd {out}_tmp
 find . | sort | xargs -n 1 -IREPLACE echo REPLACE >> filelist.txt
+touch -t 198001010000 filelist.txt
 zip -X -q out.jar -@ < filelist.txt
 popd
 mv {out}_tmp/out.jar {out}
@@ -156,6 +157,7 @@ touch -t 198001010000 {manifest}
 # jar cmf {manifest} {out} -C {tmp_out} .
 pushd {tmp_out}
 find . | sort | xargs -n 1 -IREPLACE echo REPLACE >> filelist.txt
+touch -t 198001010000 filelist.txt
 zip -X -q out.jar -@ < filelist.txt
 popd
 mv {tmp_out}/out.jar {out}
