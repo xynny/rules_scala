@@ -41,7 +41,8 @@ def _build_nosrc_jar(ctx, buildijar):
 set -e
 # Make jar file deterministic by setting the timestamp of files
 touch -t 198001010000 {manifest}
-{jar} cmf {manifest} {out}
+# {jar} cmf {manifest} {out}
+zip -X -q {out} {manifest}
 """ + ijar_cmd + res_cmd
   cmd = cmd.format(
       out=ctx.outputs.jar.path,
@@ -68,7 +69,8 @@ mkdir -p {out}_tmp
 # Make jar file deterministic by setting the timestamp of files
 find {out}_tmp -exec touch -t 198001010000 {{}} \;
 touch -t 198001010000 {manifest}
-{jar} cmf {manifest} {out} -C {out}_tmp .
+# {jar} cmf {manifest} {out} -C {out}_tmp .
+find {out}_tmp | sort | xargs zip -X -q {out} {manifest}
 """ + _get_res_cmd(ctx)
   cmd = cmd.format(
       scalac=ctx.file._scalac.path,
@@ -146,7 +148,8 @@ set -e
 # Make jar file deterministic by setting the timestamp of files
 find {tmp_out} | xargs touch -t 198001010000
 touch -t 198001010000 {manifest}
-jar cmf {manifest} {out} -C {tmp_out} .
+# jar cmf {manifest} {out} -C {tmp_out} .
+find {tmp_out} | sort | xargs zip -X -q {out} {manifest}
 """ + _get_res_cmd(ctx)
   cmd = cmd.format(
       tmp_out=tmp_out_dir.path,
