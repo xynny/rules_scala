@@ -75,7 +75,7 @@ pushd {out}_tmp
 find . | sort | xargs -n 1 -IREPLACE echo REPLACE >> filelist.txt
 zip -X -q out.jar -@ < filelist.txt
 popd
-find {out}_tmp
+mv {out}_tmp/out.jar {out}
 """ + _get_res_cmd(ctx)
   cmd = cmd.format(
       scalac=ctx.file._scalac.path,
