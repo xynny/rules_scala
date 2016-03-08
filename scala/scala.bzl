@@ -242,12 +242,13 @@ def _write_test_launcher(ctx, jars):
 
   content = """#!/bin/bash
 cd $0.runfiles
-{java} -cp {cp} {name} {args} "$@"
+{java} {sys_props} -cp {cp} {name} {args} "$@"
 """
   content = content.format(
       java=ctx.file._java.path,
       cp=":".join([j.short_path for j in jars]),
       name=ctx.attr.main_class,
+      sys_props=" ".join(["-D" + p for p in ctx.attr.sys_props]),
       args="-R \"{path}\" -oWDF".format(path=ctx.outputs.jar.short_path))
   ctx.file_action(
       output=ctx.outputs.executable,
@@ -474,6 +475,7 @@ scala_test = rule(
       "suites": attr.string_list(),
       "_scalatest": attr.label(executable=True, default=Label("@scalatest//file"), single_file=True, allow_files=True),
       "_java": attr.label(executable=True, default=Label("@bazel_tools//tools/jdk:java"), single_file=True, allow_files=True),
+      "sys_props": attr.string_list(),
       } + _implicit_deps + _common_attrs,
   outputs={
       "jar": "%{name}_deploy.jar",
