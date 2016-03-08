@@ -114,7 +114,7 @@ def _compile_zinc(ctx, jars):
   ctx.file_action(output = work_unit_args, content=flags)
 
   # Generate the "@"-file containing the command-line args for the unit of work.
-  argfile = ctx.new_file(ctx.configuration.bin_dir, "worker_input")
+  argfile = ctx.new_file(ctx.configuration.bin_dir, "{n}_worker_input".format(n=ctx.label.name))
   argfile_contents = "\n".join(["-argfile", work_unit_args.path] + [f.path for f in ctx.files.srcs])
   ctx.file_action(output=argfile, content=argfile_contents)
 
