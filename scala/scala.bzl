@@ -73,8 +73,9 @@ touch -t 198001010000 {manifest}
 # echo {manifest} >> filelist.txt
 pushd {out}_tmp
 find . | sort | xargs -n 1 -IREPLACE echo REPLACE >> filelist.txt
-echo {out}
-zip -X -q {out} -@ < filelist.txt
+zip -X -q out.jar -@ < filelist.txt
+popd
+find {out}_tmp
 """ + _get_res_cmd(ctx)
   cmd = cmd.format(
       scalac=ctx.file._scalac.path,
