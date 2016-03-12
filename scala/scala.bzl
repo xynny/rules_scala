@@ -358,8 +358,10 @@ def _scala_binary_impl(ctx):
 def _scala_test_impl(ctx):
   jars = _collect_jars(ctx.attr.deps)
   (cjars, rjars) = (jars.compiletime, jars.runtime)
-  cjars += [ctx.file._scalareflect, ctx.file._scalatest, ctx.file._scalaxml]
-  rjars += [ctx.outputs.jar, ctx.file._scalalib, ctx.file._scalareflect, ctx.file._scalatest, ctx.file._scalaxml]
+  # cjars += [ctx.file._scalareflect, ctx.file._scalatest, ctx.file._scalaxml]
+  cjars += [ctx.file._scalareflect, ctx.file._scalaxml]
+  # rjars += [ctx.outputs.jar, ctx.file._scalalib, ctx.file._scalareflect, ctx.file._scalatest, ctx.file._scalaxml]
+  rjars += [ctx.outputs.jar, ctx.file._scalalib, ctx.file._scalareflect, ctx.file._scalaxml]
   rjars += _collect_jars(ctx.attr.runtime_deps).runtime
   _write_test_launcher(ctx, rjars)
   return _scala_binary_common(ctx, cjars, rjars)
@@ -492,7 +494,7 @@ scala_test = rule(
   attrs={
       "main_class": attr.string(default="org.scalatest.tools.Runner"),
       "suites": attr.string_list(),
-      "_scalatest": attr.label(executable=True, default=Label("@scalatest//file"), single_file=True, allow_files=True),
+      # "_scalatest": attr.label(executable=True, default=Label("@scalatest//file"), single_file=True, allow_files=True),
       "_java": attr.label(executable=True, default=Label("@bazel_tools//tools/jdk:java"), single_file=True, allow_files=True),
       "sys_props": attr.string_list(),
       } + _implicit_deps + _common_attrs,
