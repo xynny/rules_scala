@@ -6,7 +6,7 @@ java_binary(
     visibility = ["//visibility:public"],
     runtime_deps = [
         ":scala-worker-lib-import",
-        "@bazel_tools//src/main/protobuf:worker_protocol_proto",
+        "@bazel_tools//src/main/protobuf:worker_protocol_java_proto",
         "@zinc_0_3_10_SNAPSHOT_jar//jar",
         "@scala_compiler_jar//jar",
         "@incremental_compiler_0_13_9_jar//jar",
@@ -27,7 +27,7 @@ scala_library(
     name = "scala-worker-lib",
     srcs = glob(["ScalaWorker.scala"]),
     deps = [
-        "@bazel_tools//src/main/protobuf:worker_protocol_proto",
+        "@bazel_tools//src/main/protobuf:worker_protocol_java_proto",
         "@zinc_0_3_10_SNAPSHOT_jar//jar",
         "@scala_compiler_jar//jar",
         "@incremental_compiler_0_13_9_jar//jar",
