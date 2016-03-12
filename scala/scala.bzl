@@ -288,6 +288,7 @@ def _collect_jars(targets):
       # see JavaSkylarkApiProvider.java, this is just the compile-time deps
       # Fetch the ijars not the class jars
       compile_jars += [jar.ijar for jar in target.java.outputs.jars]
+      print(compile_jars)
 
       # Ijars break when compiling macros, so don't use ijars of transitive deps
       # compile_jars += target.java.transitive_deps
