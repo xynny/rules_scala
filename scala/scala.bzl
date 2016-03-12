@@ -288,7 +288,7 @@ def _collect_jars(targets):
       # see JavaSkylarkApiProvider.java, this is just the compile-time deps
       # this should be improved in bazel 0.1.5 to get outputs.ijar
       # compile_jars += [target.java.outputs.ijar]
-      # compile_jars += target.java.transitive_deps
+      compile_jars += target.java.transitive_deps
       # Ijars break when compiling traits and macros
       compile_jars += target.java.transitive_runtime_deps
 
