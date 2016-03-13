@@ -251,19 +251,17 @@ cd $0.runfiles
       content=content)
 
 def _write_test_launcher(ctx, jars):
-  if len(ctx.attr.suites) != 0:
-    print("suites attribute is deprecated. All scalatest test suites are run")
-
   content = """#!/bin/bash
-cd $0.runfiles
-{java} {sys_props} -cp {cp} {name} {args} "$@"
+export DB_TESTING=true
+java -cp {jars} {sys_props} {name} {args} "$@"
 """
   content = content.format(
-      java=ctx.file._java.path,
-      cp=":".join([j.short_path for j in jars]),
       name=ctx.attr.main_class,
+      args=' '.join(_args_for_suites(ctx.attr.suites)),
+      deploy_jar=ctx.outputs.jar.path,
       sys_props=" ".join(["-D" + p for p in ctx.attr.sys_props]),
-      args="-R \"{path}\" -oWDF".format(path=ctx.outputs.jar.short_path))
+      jars=":".join([jar.short_path for jar in jars]))
+
   ctx.file_action(
       output=ctx.outputs.executable,
       content=content)
