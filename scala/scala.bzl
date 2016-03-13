@@ -297,6 +297,9 @@ def _collect_jars(ctx, targets):
       runtime_jars += [jar.class_jar for jar in target.java.outputs.jars]
       # Grab the real (non ijar) transitive dependencies for runtime
       runtime_jars += target.java.transitive_runtime_deps
+
+      # TODO(ahirreddy): Figure out why we can't use just the interfaces in compile_jars
+      compile_jars = runtime_jars
       found = True
     if not found:
       # support http_file pointed at a jar. http_jar uses ijar, which breaks scala macros
@@ -312,6 +315,9 @@ def _lib(ctx, non_macro_lib, usezinc):
   (cjars, rjars) = (jars.compiletime, jars.runtime)
   _write_manifest(ctx)
   outputs = _compile_or_empty(ctx, cjars, non_macro_lib, usezinc)
+
+  # TODO(ahirreddy): Add a flag to enable/disable including transitive dependencies of dependencies
+  cjars += _collect_jars(ctx, ctx.attr.runtime_deps).compiletime
 
   rjars += [ctx.outputs.jar]
   rjars += _collect_jars(ctx, ctx.attr.runtime_deps).runtime
