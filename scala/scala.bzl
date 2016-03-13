@@ -235,17 +235,16 @@ def _write_manifest(ctx):
       output = ctx.outputs.manifest,
       content = manifest)
 
-
 def _write_launcher(ctx, jars):
   content = """#!/bin/bash
-cd $0.runfiles
-{java} -cp {cp} {name} "$@"
+java -cp {jars} {jvm_flags} {name} "$@"
 """
   content = content.format(
-      java=ctx.file._java.path,
       name=ctx.attr.main_class,
       deploy_jar=ctx.outputs.jar.path,
-      cp=":".join([j.short_path for j in jars]))
+      jvm_flags=" ".join(["-J" + flag for flag in ctx.attr.jvm_flags]),
+      jars=":".join(["$0.runfiles/" + jar.short_path for jar in jars]))
+
   ctx.file_action(
       output=ctx.outputs.executable,
       content=content)
