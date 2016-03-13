@@ -317,7 +317,8 @@ def _lib(ctx, non_macro_lib, usezinc):
   outputs = _compile_or_empty(ctx, cjars, non_macro_lib, usezinc)
 
   # TODO(ahirreddy): Add a flag to enable/disable including transitive dependencies of dependencies
-  cjars += _collect_jars(ctx, ctx.attr.runtime_deps).compiletime
+  # TODO(ahirreddy): This should be the transitive compile time exports, not the runtime exports
+  cjars += _collect_jars(ctx, ctx.attr.runtime_deps).runtime
 
   rjars += [ctx.outputs.jar]
   rjars += _collect_jars(ctx, ctx.attr.runtime_deps).runtime
