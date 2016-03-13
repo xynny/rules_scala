@@ -286,8 +286,8 @@ def _collect_jars(ctx, targets):
       found = True
     if hasattr(target, "java"):
       # see JavaSkylarkApiProvider.java, this is just the compile-time deps
-      # Fetch the ijars not the class jars
-      compile_jars += [jar.ijar for jar in target.java.outputs.jars]
+      # Fetch the ijars not the class jars. If there is no ijar, use the class_jar
+      compile_jars += [jar.ijar or jar.class_jar for jar in target.java.outputs.jars]
 
       # Ijars break when compiling macros, so don't use ijars of transitive deps
       # compile_jars += target.java.transitive_deps
@@ -297,8 +297,6 @@ def _collect_jars(ctx, targets):
       runtime_jars += [jar.class_jar for jar in target.java.outputs.jars]
       # Grab the real (non ijar) transitive dependencies for runtime
       runtime_jars += target.java.transitive_runtime_deps
-
-      compile_jars = runtime_jars
       found = True
     if not found:
       # support http_file pointed at a jar. http_jar uses ijar, which breaks scala macros
