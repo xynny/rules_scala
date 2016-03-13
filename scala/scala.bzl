@@ -266,6 +266,12 @@ java -cp {jars} {sys_props} {name} {args} "$@"
       output=ctx.outputs.executable,
       content=content)
 
+def _args_for_suites(suites):
+  args = ["-o"]
+  for suite in suites:
+    args.extend(["-s", suite])
+  return args
+
 def _collect_jars(ctx, targets):
   """Compute the runtime and compile-time dependencies from the given targets"""
   compile_jars = set()  # not transitive
