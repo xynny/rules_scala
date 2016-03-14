@@ -286,10 +286,10 @@ def _collect_jars(ctx, targets):
     if hasattr(target, "java"):
       # see JavaSkylarkApiProvider.java, this is just the compile-time deps
       # this should be improved in bazel 0.1.5 to get outputs.ijar
-      compile_jars += [jar.class_jar for jar in target.java.outputs.jars]
-      print("========================")
-      print(ctx.label)
-      print([jar.ijar for jar in target.java.outputs.jars])
+      compile_jars += [jar.ijar for jar in target.java.outputs.jars]
+      # TODO(ahirreddy): We can't simply bring in the transitive compile time dependencies because
+      # ijar'ed macro libraries blowup the compiler (scala-logging is one such example). We instead
+      # detect these macro libraries and pull in the actual jar. Make this method more robust.
       # compile_jars += target.java.transitive_deps
       compile_jars += _split_macro_libs(target.java.transitive_deps, target.java.transitive_runtime_deps)
       runtime_jars += target.java.transitive_runtime_deps
