@@ -287,7 +287,7 @@ def _collect_jars(ctx, targets):
       runtime_jars += rjars
 
       if "common" in target.scala.outputs.ijar.path:
-        compile_jars += [target.scala.outputs.jar]
+        compile_jars += [target.scala.outputs.class_jar]
       else:
         compile_jars += [target.scala.outputs.ijar]
 
