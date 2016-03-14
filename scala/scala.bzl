@@ -313,14 +313,6 @@ def _collect_jars(ctx, targets):
       runtime_jars += target.files
       compile_jars += target.files
 
-  if ctx.label.name.endswith("sync-daemon"):
-    print("%s: Runtime" % ctx.label)
-    for j in sorted(list(set(runtime_jars))):
-      print(j.path)
-    print("%s: Compile" % ctx.label)
-    for j in sorted(list(set(compile_jars))):
-      print(j.path)
-
   return struct(compiletime = compile_jars, runtime = runtime_jars)
 
 def _replace_macro_outputs(ctx, java_target):
@@ -362,6 +354,15 @@ def _replace_macro_libs(ctx, compile_deps, runtime_deps):
 def _lib(ctx, non_macro_lib, usezinc):
   jars = _collect_jars(ctx, ctx.attr.deps)
   (cjars, rjars) = (jars.compiletime, jars.runtime)
+
+  if ctx.label.name.endswith("sync-daemon"):
+    print("%s: Runtime" % ctx.label)
+    for j in sorted(list(set(rjars))):
+      print(j.path)
+    print("%s: Compile" % ctx.label)
+    for j in sorted(list(set(cjars))):
+      print(j.path)
+
   _write_manifest(ctx)
   outputs = _compile_or_empty(ctx, cjars, non_macro_lib, usezinc)
 
