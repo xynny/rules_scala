@@ -288,7 +288,7 @@ def _collect_jars(ctx, targets):
 
       compile_jars += [target.scala.outputs.ijar]
       # Replace macros in our dependencies with their runtime versions
-      compile_jars += _replace_macro_libs(target.scala.transitive_compile_exports, rjars)
+      compile_jars += _replace_macro_libs(ctx, target.scala.transitive_compile_exports, rjars)
       found = True
     if hasattr(target, "java"):
       rjars = target.java.transitive_runtime_deps
@@ -300,7 +300,7 @@ def _collect_jars(ctx, targets):
       if ctx.attr.disable_ijars:
         compile_jars += rjars
       else:
-        compile_jars += _replace_macro_libs(target.java.transitive_deps, rjars)
+        compile_jars += _replace_macro_libs(ctx, target.java.transitive_deps, rjars)
       found = True
     if not found:
       # support http_file pointed at a jar. http_jar uses ijar, which breaks scala macros
@@ -323,12 +323,13 @@ def _replace_macro_libs(compile_deps, runtime_deps):
     if not dep_is_macro:
       filtered_compile_deps += [dep]
     else:
-      print("Filtered %s" % dep)
+      print("%s: Filtered %s" % (ctx.label, dep))
 
   # Replace the filtered dependencies with the non-ijar version
   for macro_name in found_macros:
     for dep in runtime_deps:
       if macro_name in dep.path:
+        print("%s: Replace with %s" % (ctx.label, macro_name))
         replacement_deps += [dep]
 
   return list(filtered_compile_deps + replacement_deps)
