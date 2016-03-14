@@ -235,11 +235,13 @@ def _write_manifest(ctx):
       output = ctx.outputs.manifest,
       content = manifest)
 
+
 def _write_launcher(ctx, jars):
   content = """#!/bin/bash
-java -cp {jars} {jvm_flags} {name} "$@"
+{java} -cp {jars} {jvm_flags} {name} "$@"
 """
   content = content.format(
+      java=ctx.file._java.path,
       name=ctx.attr.main_class,
       deploy_jar=ctx.outputs.jar.path,
       jvm_flags=" ".join(["-J" + flag for flag in ctx.attr.jvm_flags]),
@@ -252,14 +254,15 @@ java -cp {jars} {jvm_flags} {name} "$@"
 def _write_test_launcher(ctx, jars):
   content = """#!/bin/bash
 export DB_TESTING=true
-java -cp {jars} {sys_props} {name} {args} "$@"
+java -cp {cp} {sys_props} {name} {args} "$@"
 """
   content = content.format(
+      java=ctx.file._java.path,
+      cp=":".join([j.short_path for j in jars]),
       name=ctx.attr.main_class,
       args=' '.join(_args_for_suites(ctx.attr.suites)),
       deploy_jar=ctx.outputs.jar.path,
-      sys_props=" ".join(["-D" + p for p in ctx.attr.sys_props]),
-      jars=":".join([jar.short_path for jar in jars]))
+      sys_props=" ".join(["-D" + p for p in ctx.attr.sys_props]))
 
   ctx.file_action(
       output=ctx.outputs.executable,
@@ -271,7 +274,7 @@ def _args_for_suites(suites):
     args.extend(["-s", suite])
   return args
 
-def _collect_jars(ctx, targets):
+def _collect_jars(targets):
   """Compute the runtime and compile-time dependencies from the given targets"""
   compile_jars = set()  # not transitive
   runtime_jars = set()  # this is transitive
@@ -280,31 +283,15 @@ def _collect_jars(ctx, targets):
     if hasattr(target, "scala"):
       compile_jars += [target.scala.outputs.ijar]
       compile_jars += target.scala.transitive_compile_exports
-      compile_jars += target.scala.transitive_runtime_exports
-      # Ijars break when compiling traits and macros
-      # compile_jars += target.scala.transitive_runtime_deps
-      # compile_jars += target.scala.transitive_runtime_exports
-
       runtime_jars += target.scala.transitive_runtime_deps
       runtime_jars += target.scala.transitive_runtime_exports
       found = True
     if hasattr(target, "java"):
-      # TODO(ahirreddy): Figure out why we can't use just the interfaces in compile_jars
       # see JavaSkylarkApiProvider.java, this is just the compile-time deps
-      # Fetch the ijars not the class jars. If there is no ijar, use the class_jar
-      # compile_jars += [jar.ijar or jar.class_jar for jar in target.java.outputs.jars]
-
-      # Ijars break when compiling macros, so don't use ijars of transitive deps
-      # compile_jars += target.java.transitive_deps
-      # compile_jars += target.java.transitive_runtime_deps
-
-      # Grab the actual class jars of the java rule for runtime
-      runtime_jars += [jar.class_jar for jar in target.java.outputs.jars]
-      compile_jars += [jar.class_jar for jar in target.java.outputs.jars]
-      # Grab the real (non ijar) transitive dependencies for runtime
+      # this should be improved in bazel 0.1.5 to get outputs.ijar
+      # compile_jars += [target.java.outputs.ijar]
+      compile_jars += target.java.transitive_deps
       runtime_jars += target.java.transitive_runtime_deps
-      compile_jars += target.java.transitive_runtime_deps
-
       found = True
     if not found:
       # support http_file pointed at a jar. http_jar uses ijar, which breaks scala macros
@@ -316,23 +303,20 @@ def _split_macro_libs(jars):
   print(jars[0])
 
 def _lib(ctx, non_macro_lib, usezinc):
-  jars = _collect_jars(ctx, ctx.attr.deps)
+  jars = _collect_jars(ctx.attr.deps)
   (cjars, rjars) = (jars.compiletime, jars.runtime)
-  # TODO(ahirreddy): Add a flag to enable/disable including transitive dependencies of dependencies
-  # TODO(ahirreddy): This should be the transitive compile time exports, not the runtime exports
-  cjars += _collect_jars(ctx, ctx.attr.deps).compiletime
   _write_manifest(ctx)
   outputs = _compile_or_empty(ctx, cjars, non_macro_lib, usezinc)
 
   rjars += [ctx.outputs.jar]
-  rjars += _collect_jars(ctx, ctx.attr.runtime_deps).runtime
+  rjars += _collect_jars(ctx.attr.runtime_deps).runtime
 
   if not non_macro_lib:
     #  macros need the scala reflect jar
     cjars += [ctx.file._scalareflect]
     rjars += [ctx.file._scalareflect]
 
-  texp = _collect_jars(ctx, ctx.attr.exports)
+  texp = _collect_jars(ctx.attr.exports)
   scalaattr = struct(outputs = outputs,
                      transitive_runtime_deps = rjars,
                      transitive_compile_exports = texp.compiletime,
@@ -367,22 +351,22 @@ def _scala_binary_common(ctx, cjars, rjars):
       runfiles=runfiles)
 
 def _scala_binary_impl(ctx):
-  jars = _collect_jars(ctx, ctx.attr.deps)
+  jars = _collect_jars(ctx.attr.deps)
   (cjars, rjars) = (jars.compiletime, jars.runtime)
   cjars += [ctx.file._scalareflect]
   rjars += [ctx.outputs.jar, ctx.file._scalalib, ctx.file._scalareflect]
-  rjars += _collect_jars(ctx, ctx.attr.runtime_deps).runtime
+  rjars += _collect_jars(ctx.attr.runtime_deps).runtime
   _write_launcher(ctx, rjars)
   return _scala_binary_common(ctx, cjars, rjars)
 
 def _scala_test_impl(ctx):
-  jars = _collect_jars(ctx, ctx.attr.deps)
+  jars = _collect_jars(ctx.attr.deps)
   (cjars, rjars) = (jars.compiletime, jars.runtime)
   # cjars += [ctx.file._scalareflect, ctx.file._scalatest, ctx.file._scalaxml]
   cjars += [ctx.file._scalareflect, ctx.file._scalaxml]
   # rjars += [ctx.outputs.jar, ctx.file._scalalib, ctx.file._scalareflect, ctx.file._scalatest, ctx.file._scalaxml]
   rjars += [ctx.outputs.jar, ctx.file._scalalib, ctx.file._scalareflect, ctx.file._scalaxml]
-  rjars += _collect_jars(ctx, ctx.attr.runtime_deps).runtime
+  rjars += _collect_jars(ctx.attr.runtime_deps).runtime
   _write_test_launcher(ctx, rjars)
   return _scala_binary_common(ctx, cjars, rjars)
 
