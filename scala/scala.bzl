@@ -286,7 +286,7 @@ def _collect_jars(ctx, targets):
     if hasattr(target, "java"):
       # see JavaSkylarkApiProvider.java, this is just the compile-time deps
       # this should be improved in bazel 0.1.5 to get outputs.ijar
-      compile_jars += [jar.ijar for jar in target.java.outputs.jars]
+      compile_jars += [jar.class_jar for jar in target.java.outputs.jars]
       print("========================")
       print(ctx.label)
       print([jar.ijar for jar in target.java.outputs.jars])
