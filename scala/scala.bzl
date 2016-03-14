@@ -316,7 +316,7 @@ def _replace_macro_libs(compile_deps, runtime_deps):
     for macro_name in _KNOWN_MACROS:
       if macro_name in dep.path:
         dep_is_macro = True
-        found_macros += macro
+        found_macros += macro_name
     if not dep_is_macro:
       filtered_compile_deps += dep
 
