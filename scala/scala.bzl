@@ -280,6 +280,8 @@ def _collect_jars(ctx, targets):
   """Compute the runtime and compile-time dependencies from the given targets"""
   compile_jars = set()  # not transitive
   runtime_jars = set()  # this is transitive
+  evil1 = set()
+  evil2 = set()
   for target in targets:
     found = False
     if hasattr(target, "scala"):
@@ -287,8 +289,12 @@ def _collect_jars(ctx, targets):
       runtime_jars += rjars
 
       if ctx.attr.scala_runtime_jars:
+        evil1 += rjars
         compile_jars += rjars
       else:
+        evil2 += [target.scala.outputs.ijar]
+        evil2 += _replace_macro_libs(ctx, target.scala.transitive_compile_exports, rjars)
+
         compile_jars += [target.scala.outputs.ijar]
         # Replace macros in our dependencies with their runtime versions
         compile_jars += _replace_macro_libs(ctx, target.scala.transitive_compile_exports, rjars)
@@ -313,7 +319,7 @@ def _collect_jars(ctx, targets):
       runtime_jars += target.files
       compile_jars += target.files
 
-  return struct(compiletime = compile_jars, runtime = runtime_jars)
+  return struct(compiletime = compile_jars, runtime = runtime_jars, evil1 = evil1, evil2 = evil2)
 
 def _replace_macro_outputs(ctx, java_target):
   collected_jars = set()
@@ -357,10 +363,10 @@ def _lib(ctx, non_macro_lib, usezinc):
 
   if ctx.label.name.endswith("sync-daemon"):
     print("%s: Runtime" % ctx.label)
-    for j in sorted(list(set(rjars))):
+    for j in sorted(list(set(jars.evil1))):
       print(j.path)
     print("%s: Compile" % ctx.label)
-    for j in sorted(list(set(cjars))):
+    for j in sorted(list(set(jars.evil2))):
       print(j.path)
 
   _write_manifest(ctx)
