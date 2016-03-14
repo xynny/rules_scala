@@ -320,6 +320,7 @@ def _lib(ctx, non_macro_lib, usezinc):
   # TODO(ahirreddy): This should be the transitive compile time exports, not the runtime exports
   cjars += _collect_jars(ctx, ctx.attr.deps).compiletime
   _write_manifest(ctx)
+  print(cjars)
   outputs = _compile_or_empty(ctx, cjars, non_macro_lib, usezinc)
 
   rjars += [ctx.outputs.jar]
