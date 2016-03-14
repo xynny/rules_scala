@@ -313,7 +313,7 @@ def _replace_macro_outputs(java_target):
   for jar in java_target.outputs.jars:
     found_macro = False
     for macro_name in _KNOWN_MACROS:
-      if macro_name in jar.ijar:
+      if macro_name in jar.ijar.path:
         found_macro = True
     if found_macro:
       collected_jars += jar.class_jar
