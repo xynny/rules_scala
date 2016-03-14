@@ -317,7 +317,6 @@ def _collect_jars(ctx, targets):
     print("%s: Runtime" % ctx.label)
     for j in sorted(list(set(runtime_jars))):
       print(j.path)
-    cjars = _replace_macro_outputs(target.java) + _replace_macro_libs(ctx, target.java.transitive_deps, rjars)
     print("%s: Compile" % ctx.label)
     for j in sorted(list(set(compile_jars))):
       print(j.path)
