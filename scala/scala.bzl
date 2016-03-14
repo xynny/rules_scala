@@ -295,7 +295,8 @@ def _collect_jars(ctx, targets):
 
         compile_jars += rjars
       else:
-        compile_jars += [target.scala.outputs.ijar]
+        if not ctx.attr.disable_scala_jar:
+          compile_jars += [target.scala.outputs.ijar]
         # Replace macros in our dependencies with their runtime versions
         if not ctx.attr.disable_transitive_scala:
           compile_jars += _replace_macro_libs(ctx, target.scala.transitive_compile_exports, rjars)
@@ -464,6 +465,7 @@ _common_attrs = {
   "no_ijar": attr.string_list(default=[]),
   "disable_transitive_scala": attr.bool(default=False),
   "disable_transitive_java": attr.bool(default=False),
+  "disable_scala_jar": attr.bool(default=False),
 }
 
 _zinc_compile_attrs = {
