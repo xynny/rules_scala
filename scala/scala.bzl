@@ -288,21 +288,23 @@ def _collect_jars(ctx, targets):
       runtime_jars += target.scala.transitive_runtime_exports
       found = True
     if hasattr(target, "java"):
+      # TODO(ahirreddy): Figure out why we can't use just the interfaces in compile_jars
       # see JavaSkylarkApiProvider.java, this is just the compile-time deps
       # Fetch the ijars not the class jars. If there is no ijar, use the class_jar
-      compile_jars += [jar.ijar or jar.class_jar for jar in target.java.outputs.jars]
+      # compile_jars += [jar.ijar or jar.class_jar for jar in target.java.outputs.jars]
 
       # Ijars break when compiling macros, so don't use ijars of transitive deps
       # compile_jars += target.java.transitive_deps
-      compile_jars += target.java.transitive_runtime_deps
+      # compile_jars += target.java.transitive_runtime_deps
+
 
       # Grab the actual class jars of the java rule for runtime
       runtime_jars += [jar.class_jar for jar in target.java.outputs.jars]
+      compile_jars += [jar.class_jar for jar in target.java.outputs.jars]
       # Grab the real (non ijar) transitive dependencies for runtime
       runtime_jars += target.java.transitive_runtime_deps
+      compile_jars += target.java.transitive_runtime_deps
 
-      # TODO(ahirreddy): Figure out why we can't use just the interfaces in compile_jars
-      compile_jars = runtime_jars
       found = True
     if not found:
       # support http_file pointed at a jar. http_jar uses ijar, which breaks scala macros
@@ -317,9 +319,6 @@ def _lib(ctx, non_macro_lib, usezinc):
   jars = _collect_jars(ctx, ctx.attr.deps)
   (cjars, rjars) = (jars.compiletime, jars.runtime)
   _write_manifest(ctx)
-  print("================================")
-  print(ctx.label)
-  print(cjars)
   outputs = _compile_or_empty(ctx, cjars, non_macro_lib, usezinc)
 
   rjars += [ctx.outputs.jar]
