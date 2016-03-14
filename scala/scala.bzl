@@ -293,10 +293,14 @@ def _collect_jars(ctx, targets):
         # Replace macros in our dependencies with their runtime versions
         compile_jars += _replace_macro_libs(ctx, target.scala.transitive_compile_exports, rjars)
 
-      if ctx.attr.compile_with_runtime_jars:
-        print("%s: Runtime: %s" % (ctx.label, rjars))
+      if ctx.attr.compile_with_runtime_jars and ctx.label.endswith("sync-daemon"):
+        print("%s: Runtime" % ctx.label)
+        for j in sorted(list(rjars)):
+          print(j.path)
         cjars = [target.scala.outputs.ijar] + _replace_macro_libs(ctx, target.scala.transitive_compile_exports, rjars)
-        print("%s: Compile: %s" % (ctx.label, cjars))
+        print("%s: Compile" % ctx.label)
+        for j in sorted(list(cjars)):
+          print(j.path)
 
       found = True
     if hasattr(target, "java"):
@@ -314,10 +318,14 @@ def _collect_jars(ctx, targets):
         else:
           compile_jars += _replace_macro_libs(ctx, target.java.transitive_deps, rjars)
 
-      if ctx.attr.compile_with_runtime_jars:
-        print("%s: Runtime: %s" % (ctx.label, rjars))
+      if ctx.attr.compile_with_runtime_jars and ctx.label.endswith("sync-daemon"):
+        print("%s: Runtime" % ctx.label)
+        for j in sorted(list(rjars)):
+          print(j.path)
         cjars = _replace_macro_outputs(target.java) + _replace_macro_libs(ctx, target.java.transitive_deps, rjars)
-        print("%s: Compile: %s" % (ctx.label, cjars))
+        print("%s: Compile" % ctx.label)
+        for j in sorted(list(cjars)):
+          print(j.path)
 
       found = True
     if not found:
