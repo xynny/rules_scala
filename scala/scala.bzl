@@ -287,6 +287,9 @@ def _collect_jars(ctx, targets):
       # see JavaSkylarkApiProvider.java, this is just the compile-time deps
       # this should be improved in bazel 0.1.5 to get outputs.ijar
       compile_jars += [jar.ijar for jar in target.java.outputs.jars]
+      print("========================")
+      print(ctx.label)
+      print([jar.ijar for jar in target.java.outputs.jars])
       # compile_jars += target.java.transitive_deps
       compile_jars += _split_macro_libs(target.java.transitive_deps, target.java.transitive_runtime_deps)
       runtime_jars += target.java.transitive_runtime_deps
