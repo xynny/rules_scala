@@ -296,8 +296,16 @@ def _collect_jars(ctx, targets):
         compile_jars += rjars
       else:
         if not ctx.attr.disable_scala_jar:
-          print("alskdjfasf %s" % target.scala.outputs.ijar)
+          print("Including %s" % target.scala.outputs.jar.path)
           compile_jars += [target.scala.outputs.ijar]
+        else:
+          if target.scala.outputs.jar.path in ctx.attr.scala_includes:
+            print("Including %s" % target.scala.outputs.jar.path)
+            compile_jars += [target.scala.outputs.ijar]
+          else:
+            print("Excluding %s" % target.scala.outputs.jar.path)
+
+
         # Replace macros in our dependencies with their runtime versions
         if not ctx.attr.disable_transitive_scala:
           compile_jars += _replace_macro_libs(ctx, target.scala.transitive_compile_exports, rjars)
@@ -467,6 +475,7 @@ _common_attrs = {
   "disable_transitive_scala": attr.bool(default=False),
   "disable_transitive_java": attr.bool(default=False),
   "disable_scala_jar": attr.bool(default=False),
+  "scala_includes": attr.string_list(default=[]),
 }
 
 _zinc_compile_attrs = {
