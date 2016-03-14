@@ -305,6 +305,10 @@ def _collect_jars(ctx, targets):
       runtime_jars += target.java.transitive_runtime_deps
       compile_jars += target.java.transitive_runtime_deps
 
+      print("===============================")
+      print(ctx.label)
+      print(compile_jars)
+
       found = True
     if not found:
       # support http_file pointed at a jar. http_jar uses ijar, which breaks scala macros
