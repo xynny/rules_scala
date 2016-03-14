@@ -294,8 +294,8 @@ def _collect_jars(ctx, targets):
       rjars = target.java.transitive_runtime_deps
       runtime_jars += rjars
 
-      # Grab interface jars as compile dependencies
-      compile_jars += [j.ijar for j in target.java.outputs.jars]
+      # Grab interface jars as compile dependencies, unless they are macros
+      compile_jars += _replace_macro_libs(target.java)
       # Replace macros in our dependencies with their runtime versions
       if ctx.attr.disable_ijars:
         compile_jars += rjars
@@ -307,6 +307,19 @@ def _collect_jars(ctx, targets):
       runtime_jars += target.files
       compile_jars += target.files
   return struct(compiletime = compile_jars, runtime = runtime_jars)
+
+def _replace_macro_outputs(java_target):
+  collected_jars = set()
+  for jar in java_target.outputs.jars:
+    found_macro = False
+    for macro_name in _KNOWN_MACROS:
+      if macro_name in jar.ijar:
+        found_macro = True
+    if found_macro:
+      collected_jars += jar.class_jar
+    else:
+      collected_jars += jar.ijar
+  return list(collected_jars)
 
 def _replace_macro_libs(ctx, compile_deps, runtime_deps):
   found_macros = set()
