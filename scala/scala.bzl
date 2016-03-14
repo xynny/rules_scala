@@ -306,6 +306,7 @@ def _collect_jars(ctx, targets):
       # support http_file pointed at a jar. http_jar uses ijar, which breaks scala macros
       runtime_jars += target.files
       compile_jars += target.files
+      print(target.files)
   return struct(compiletime = compile_jars, runtime = runtime_jars)
 
 def _replace_macro_libs(ctx, compile_deps, runtime_deps):
