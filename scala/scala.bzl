@@ -280,19 +280,30 @@ def _collect_jars(ctx, targets):
     if hasattr(target, "scala"):
       compile_jars += [target.scala.outputs.ijar]
       compile_jars += target.scala.transitive_compile_exports
+      # Ijars break when compiling traits and macros
+      # compile_jars += target.scala.transitive_runtime_deps
+      # compile_jars += target.scala.transitive_runtime_exports
+
       runtime_jars += target.scala.transitive_runtime_deps
       runtime_jars += target.scala.transitive_runtime_exports
       found = True
     if hasattr(target, "java"):
+      # TODO(ahirreddy): Figure out why we can't use just the interfaces in compile_jars
       # see JavaSkylarkApiProvider.java, this is just the compile-time deps
-      # this should be improved in bazel 0.1.5 to get outputs.ijar
-      compile_jars += [jar.ijar for jar in target.java.outputs.jars]
-      # TODO(ahirreddy): We can't simply bring in the transitive compile time dependencies because
-      # ijar'ed macro libraries blowup the compiler (scala-logging is one such example). We instead
-      # detect these macro libraries and pull in the actual jar. Make this method more robust.
+      # Fetch the ijars not the class jars. If there is no ijar, use the class_jar
+      # compile_jars += [jar.ijar or jar.class_jar for jar in target.java.outputs.jars]
+
+      # Ijars break when compiling macros, so don't use ijars of transitive deps
       # compile_jars += target.java.transitive_deps
-      compile_jars += _split_macro_libs(target.java.transitive_deps, target.java.transitive_runtime_deps)
+      # compile_jars += target.java.transitive_runtime_deps
+
+      # Grab the actual class jars of the java rule for runtime
+      runtime_jars += [jar.class_jar for jar in target.java.outputs.jars]
+      compile_jars += [jar.class_jar for jar in target.java.outputs.jars]
+      # Grab the real (non ijar) transitive dependencies for runtime
+      compile_jars += target.java.transitive_runtime_deps
       runtime_jars += target.java.transitive_runtime_deps
+
       found = True
     if not found:
       # support http_file pointed at a jar. http_jar uses ijar, which breaks scala macros
@@ -300,10 +311,8 @@ def _collect_jars(ctx, targets):
       compile_jars += target.files
   return struct(compiletime = compile_jars, runtime = runtime_jars)
 
-def _split_macro_libs(compile_deps, runtime_deps):
-  filtered_compile = [f for f in compile_deps if "scalalogging" not in f.path]
-  replacement = [f for f in runtime_deps if "scalalogging" in f.path]
-  return filtered_compile + replacement
+def _split_macro_libs(jars):
+  print(jars[0])
 
 def _lib(ctx, non_macro_lib, usezinc):
   jars = _collect_jars(ctx, ctx.attr.deps)
@@ -321,7 +330,7 @@ def _lib(ctx, non_macro_lib, usezinc):
 
   texp = _collect_jars(ctx, ctx.attr.exports)
   scalaattr = struct(outputs = outputs,
-                     transitive_runtime_deps = rjars,
+                     transitive_compile_exports = texp.compiletime,
                      transitive_compile_exports = texp.compiletime,
                      transitive_runtime_exports = texp.runtime
                      )
