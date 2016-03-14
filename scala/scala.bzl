@@ -276,7 +276,7 @@ def _args_for_suites(suites):
     args.extend(["-s", suite])
   return args
 
-def _collect_jars(ctx, targets):
+def _collect_jars(ctx, targets, print_bool = False):
   """Compute the runtime and compile-time dependencies from the given targets"""
   compile_jars = set()  # not transitive
   runtime_jars = set()  # this is transitive
@@ -288,10 +288,19 @@ def _collect_jars(ctx, targets):
 
       if ctx.attr.scala_runtime_jars:
         compile_jars += rjars
+
+        if print_bool and ctx.label.name.endswith("sync-daemon"):
+          print("%s: Runtime" % ctx.label)
+          for j in sorted(list(set(rjars))):
+            print(j.path)
+          print("%s: Compile" % ctx.label)
+          for j in sorted(list(set([target.scala.outputs.ijar] + _replace_macro_libs(ctx, target.scala.transitive_compile_exports, rjars)))):
+            print(j.path)
+
       else:
         compile_jars += [target.scala.outputs.ijar]
         # Replace macros in our dependencies with their runtime versions
-        # compile_jars += _replace_macro_libs(ctx, target.scala.transitive_compile_exports, rjars)
+        compile_jars += _replace_macro_libs(ctx, target.scala.transitive_compile_exports, rjars)
       found = True
     if hasattr(target, "java"):
       rjars = target.java.transitive_runtime_deps
@@ -352,16 +361,8 @@ def _replace_macro_libs(ctx, compile_deps, runtime_deps):
   return list(filtered_compile_deps + replacement_deps)
 
 def _lib(ctx, non_macro_lib, usezinc):
-  jars = _collect_jars(ctx, ctx.attr.deps)
+  jars = _collect_jars(ctx, ctx.attr.deps, True)
   (cjars, rjars) = (jars.compiletime, jars.runtime)
-
-  if ctx.label.name.endswith("sync-daemon"):
-    print("%s: Runtime" % ctx.label)
-    for j in sorted(list(set(rjars))):
-      print(j.path)
-    print("%s: Compile" % ctx.label)
-    for j in sorted(list(set(cjars))):
-      print(j.path)
 
   _write_manifest(ctx)
   outputs = _compile_or_empty(ctx, cjars, non_macro_lib, usezinc)
