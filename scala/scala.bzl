@@ -322,6 +322,8 @@ def _replace_macro_libs(compile_deps, runtime_deps):
         found_macros += [macro_name]
     if not dep_is_macro:
       filtered_compile_deps += [dep]
+    else:
+      print("Filtered %s" % dep)
 
   # Replace the filtered dependencies with the non-ijar version
   for macro_name in found_macros:
