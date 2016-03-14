@@ -331,7 +331,6 @@ def _lib(ctx, non_macro_lib, usezinc):
   texp = _collect_jars(ctx, ctx.attr.exports)
   scalaattr = struct(outputs = outputs,
                      transitive_compile_exports = texp.compiletime,
-                     transitive_compile_exports = texp.compiletime,
                      transitive_runtime_exports = texp.runtime
                      )
   runfiles = ctx.runfiles(
