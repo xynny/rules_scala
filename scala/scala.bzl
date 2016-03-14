@@ -17,7 +17,7 @@
 
 _scala_filetype = FileType([".scala", ".srcjar", ".java"])
 
-_KNOWN_MACROS = ["scalalogging", "docker-client", "jackson-annotations-2.4.0"]
+_KNOWN_MACROS = ["scalalogging", "docker-client"]
 
 def _adjust_resources_path(path):
   dir_1, dir_2, rel_path = path.partition("resources")
@@ -286,11 +286,7 @@ def _collect_jars(ctx, targets):
       rjars = target.scala.transitive_runtime_deps + target.scala.transitive_runtime_exports
       runtime_jars += rjars
 
-      if "common" in target.scala.outputs.ijar.path:
-        compile_jars += [target.scala.outputs.class_jar]
-      else:
-        compile_jars += [target.scala.outputs.ijar]
-
+      compile_jars += [target.scala.outputs.ijar]
       # Replace macros in our dependencies with their runtime versions
       compile_jars += _replace_macro_libs(ctx, target.scala.transitive_compile_exports, rjars)
       found = True
