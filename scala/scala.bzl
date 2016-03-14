@@ -327,7 +327,7 @@ def _replace_macro_outputs(ctx, java_target):
   collected_jars = set()
   for jar in java_target.outputs.jars:
     found_macro = False
-    for macro_name in set(ctx.no_ijar + _KNOWN_MACROS):
+    for macro_name in set(ctx.attr.no_ijar + _KNOWN_MACROS):
       if macro_name in jar.ijar.path:
         found_macro = True
     if found_macro:
@@ -344,7 +344,7 @@ def _replace_macro_libs(ctx, compile_deps, runtime_deps):
   # Filter out ijars of dependencies that are macros
   for dep in compile_deps:
     dep_is_macro = False
-    for macro_name in set(ctx.no_ijar + _KNOWN_MACROS):
+    for macro_name in set(ctx.attr.no_ijar + _KNOWN_MACROS):
       if macro_name in dep.path:
         dep_is_macro = True
         found_macros += [macro_name]
