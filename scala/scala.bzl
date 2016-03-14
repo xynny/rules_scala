@@ -329,7 +329,7 @@ def _replace_macro_libs(ctx, compile_deps, runtime_deps):
   for macro_name in found_macros:
     for dep in runtime_deps:
       if macro_name in dep.path:
-        print("%s: Replace with %s" % (ctx.label, macro_name))
+        print("%s: Replace with %s" % (ctx.label, dep))
         replacement_deps += [dep]
 
   return list(filtered_compile_deps + replacement_deps)
