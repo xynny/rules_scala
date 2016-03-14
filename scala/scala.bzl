@@ -292,16 +292,6 @@ def _collect_jars(ctx, targets):
         compile_jars += [target.scala.outputs.ijar]
         # Replace macros in our dependencies with their runtime versions
         compile_jars += _replace_macro_libs(ctx, target.scala.transitive_compile_exports, rjars)
-
-      if ctx.attr.compile_with_runtime_jars and ctx.label.name.endswith("sync-daemon"):
-        print("%s: Runtime" % ctx.label)
-        for j in sorted(list(rjars)):
-          print(j.path)
-        cjars = [target.scala.outputs.ijar] + _replace_macro_libs(ctx, target.scala.transitive_compile_exports, rjars)
-        print("%s: Compile" % ctx.label)
-        for j in sorted(list(cjars)):
-          print(j.path)
-
       found = True
     if hasattr(target, "java"):
       rjars = target.java.transitive_runtime_deps
@@ -317,21 +307,21 @@ def _collect_jars(ctx, targets):
           compile_jars += rjars
         else:
           compile_jars += _replace_macro_libs(ctx, target.java.transitive_deps, rjars)
-
-      if ctx.attr.compile_with_runtime_jars and ctx.label.name.endswith("sync-daemon"):
-        print("%s: Runtime" % ctx.label)
-        for j in sorted(list(rjars)):
-          print(j.path)
-        cjars = _replace_macro_outputs(target.java) + _replace_macro_libs(ctx, target.java.transitive_deps, rjars)
-        print("%s: Compile" % ctx.label)
-        for j in sorted(list(cjars)):
-          print(j.path)
-
       found = True
     if not found:
       # support http_file pointed at a jar. http_jar uses ijar, which breaks scala macros
       runtime_jars += target.files
       compile_jars += target.files
+
+  if ctx.label.name.endswith("sync-daemon"):
+    print("%s: Runtime" % ctx.label)
+    for j in sorted(list(set(runtime_jars))):
+      print(j.path)
+    cjars = _replace_macro_outputs(target.java) + _replace_macro_libs(ctx, target.java.transitive_deps, rjars)
+    print("%s: Compile" % ctx.label)
+    for j in sorted(list(set(compile_jars))):
+      print(j.path)
+
   return struct(compiletime = compile_jars, runtime = runtime_jars)
 
 def _replace_macro_outputs(java_target):
