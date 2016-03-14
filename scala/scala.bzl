@@ -286,7 +286,7 @@ def _collect_jars(ctx, targets):
       rjars = target.scala.transitive_runtime_deps + target.scala.transitive_runtime_exports
       runtime_jars += rjars
 
-      if ctx.attr.compile_with_runtime_jars:
+      if ctx.attr.scala_runtime_jars:
         compile_jars += rjars
       else:
         compile_jars += [target.scala.outputs.ijar]
@@ -297,7 +297,7 @@ def _collect_jars(ctx, targets):
       rjars = target.java.transitive_runtime_deps
       runtime_jars += rjars
 
-      if ctx.attr.compile_with_runtime_jars:
+      if ctx.attr.java_runtime_jars:
         compile_jars += rjars
       else:
         # Grab interface jars as compile dependencies
@@ -451,7 +451,8 @@ _common_attrs = {
   "scalacopts":attr.string_list(),
   "jvm_flags": attr.string_list(),
   "disable_ijars": attr.bool(default=False),
-  "compile_with_runtime_jars": attr.bool(default=False),
+  "scala_runtime_jars": attr.bool(default=False),
+  "java_runtime_jars": attr.bool(default=False),
   "no_ijar": attr.string_list(default=[])
 }
 
