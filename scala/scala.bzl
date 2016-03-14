@@ -17,7 +17,7 @@
 
 _scala_filetype = FileType([".scala", ".srcjar", ".java"])
 
-_KNOWN_MACROS = ["scalalogging"]
+_KNOWN_MACROS = ["scalalogging", "jackson-annotations"]
 
 def _adjust_resources_path(path):
   dir_1, dir_2, rel_path = path.partition("resources")
