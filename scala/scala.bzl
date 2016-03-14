@@ -316,10 +316,9 @@ def _split_macro_libs(jars):
 def _lib(ctx, non_macro_lib, usezinc):
   jars = _collect_jars(ctx, ctx.attr.deps)
   (cjars, rjars) = (jars.compiletime, jars.runtime)
-  # TODO(ahirreddy): Add a flag to enable/disable including transitive dependencies of dependencies
-  # TODO(ahirreddy): This should be the transitive compile time exports, not the runtime exports
-  cjars += _collect_jars(ctx, ctx.attr.deps).compiletime
   _write_manifest(ctx)
+  print("================================")
+  print(ctx.label)
   print(cjars)
   outputs = _compile_or_empty(ctx, cjars, non_macro_lib, usezinc)
 
