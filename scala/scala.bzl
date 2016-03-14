@@ -278,16 +278,15 @@ def _collect_jars(ctx, targets):
   for target in targets:
     found = False
     if hasattr(target, "scala"):
-      # compile_jars += [target.scala.outputs.ijar]
-      # compile_jars += target.scala.transitive_compile_exports
+      compile_jars += [target.scala.outputs.ijar]
+      compile_jars += target.scala.transitive_compile_exports
+      compile_jars += target.scala.transitive_runtime_exports
       # Ijars break when compiling traits and macros
       # compile_jars += target.scala.transitive_runtime_deps
       # compile_jars += target.scala.transitive_runtime_exports
 
       runtime_jars += target.scala.transitive_runtime_deps
-      compile_jars += target.scala.transitive_runtime_deps
       runtime_jars += target.scala.transitive_runtime_exports
-      compile_jars += target.scala.transitive_runtime_exports
       found = True
     if hasattr(target, "java"):
       # TODO(ahirreddy): Figure out why we can't use just the interfaces in compile_jars
