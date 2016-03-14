@@ -305,6 +305,7 @@ def _collect_jars(ctx, targets):
         # Replace macros in our dependencies with their runtime versions
         if ctx.attr.disable_ijars:
           # compile_jars += rjars
+          pass
         else:
           # compile_jars += _replace_macro_libs(ctx, target.java.transitive_deps, rjars)
           pass
