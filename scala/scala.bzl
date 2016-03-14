@@ -322,8 +322,8 @@ def _collect_jars(ctx, targets):
         compile_jars += cjars
 
       if ctx.attr.compile_with_runtime_jars:
-        print("%s: Runtime %s", % (ctx.label, rjars))
-        print("%s: Compiletime %s", % (ctx.label, cjars))
+        print("%s: Runtime %s" % (ctx.label, rjars))
+        print("%s: Compiletime %s" % (ctx.label, cjars))
 
       found = True
     if not found:
