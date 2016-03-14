@@ -278,7 +278,6 @@ def _collect_jars(ctx, targets):
   for target in targets:
     found = False
     if hasattr(target, "scala"):
-      compile_jars += [target.scala.outputs.jar]
       compile_jars += target.scala.transitive_compile_exports
       # Ijars break when compiling traits and macros
       # compile_jars += target.scala.transitive_runtime_deps
@@ -334,7 +333,7 @@ def _lib(ctx, non_macro_lib, usezinc):
   texp = _collect_jars(ctx, ctx.attr.exports)
   scalaattr = struct(outputs = outputs,
                      transitive_runtime_deps = rjars,
-                     transitive_compile_exports = texp.compiletime,
+                     transitive_compile_exports = texp.compiletime + [ctx.outputs.ijar],
                      transitive_runtime_exports = texp.runtime
                      )
   runfiles = ctx.runfiles(
