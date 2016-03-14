@@ -289,9 +289,10 @@ def _collect_jars(ctx, targets):
       if ctx.attr.compile_with_runtime_jars:
         compile_jars += rjars
       else:
-        compile_jars += [target.scala.outputs.ijar]
+        # compile_jars += [target.scala.outputs.ijar]
         # Replace macros in our dependencies with their runtime versions
         # compile_jars += _replace_macro_libs(ctx, target.scala.transitive_compile_exports, rjars)
+        pass
       found = True
     if hasattr(target, "java"):
       rjars = target.java.transitive_runtime_deps
