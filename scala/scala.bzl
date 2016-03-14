@@ -314,16 +314,16 @@ def _replace_macro_libs(compile_deps, runtime_deps):
   for dep in compile_deps:
     dep_is_macro = False
     for macro_name in _KNOWN_MACROS:
-      if macro in dep.path:
+      if macro_name in dep.path:
         dep_is_macro = True
         found_macros += macro
     if not dep_is_macro:
       filtered_compile_deps += dep
 
   # Replace the filtered dependencies with the non-ijar version
-  for macro in found_macros:
+  for macro_name in found_macros:
     for dep in runtime_deps:
-      if macro in dep.path:
+      if macro_name in dep.path:
         replacement_deps += dep
 
   return list(filtered_compile_deps + replacement_deps)
