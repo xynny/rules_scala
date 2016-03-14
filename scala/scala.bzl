@@ -290,11 +290,11 @@ def _collect_jars(ctx, targets):
 
       if ctx.attr.scala_runtime_jars:
         evil1 += rjars
-        compile_jars += rjars
-      else:
         evil2 += [target.scala.outputs.ijar]
         evil2 += _replace_macro_libs(ctx, target.scala.transitive_compile_exports, rjars)
 
+        compile_jars += rjars
+      else:
         compile_jars += [target.scala.outputs.ijar]
         # Replace macros in our dependencies with their runtime versions
         compile_jars += _replace_macro_libs(ctx, target.scala.transitive_compile_exports, rjars)
