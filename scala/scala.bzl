@@ -303,6 +303,7 @@ def _collect_jars(ctx, targets):
         # Grab interface jars as compile dependencies
         compile_jars += _replace_macro_outputs(ctx, target.java)
         # Replace macros in our dependencies with their runtime versions
+        compile_jars += rjars
         if ctx.attr.disable_ijars:
           # compile_jars += rjars
           pass
