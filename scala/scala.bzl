@@ -302,7 +302,7 @@ def _collect_jars(ctx, targets):
       compile_jars += [jar.class_jar for jar in target.java.outputs.jars]
       # Grab the real (non ijar) transitive dependencies for runtime
       runtime_jars += target.java.transitive_runtime_deps
-      compile_jars += [jar.class_jar for jar in target.java.outputs.jars]
+      compile_jars += target.java.transitive_runtime_deps
 
       found = True
     if not found:
