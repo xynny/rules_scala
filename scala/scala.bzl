@@ -308,7 +308,7 @@ def _collect_jars(ctx, targets):
       compile_jars += target.files
   return struct(compiletime = compile_jars, runtime = runtime_jars)
 
-def _replace_macro_libs(compile_deps, runtime_deps):
+def _replace_macro_libs(ctx, compile_deps, runtime_deps):
   found_macros = set()
   filtered_compile_deps = set()
   replacement_deps = set()
