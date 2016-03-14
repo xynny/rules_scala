@@ -276,7 +276,7 @@ def _args_for_suites(suites):
     args.extend(["-s", suite])
   return args
 
-def _collect_jars(targets):
+def _collect_jars(ctx, targets):
   """Compute the runtime and compile-time dependencies from the given targets"""
   compile_jars = set()  # not transitive
   runtime_jars = set()  # this is transitive
@@ -297,7 +297,10 @@ def _collect_jars(targets):
       # Grab interface jars as compile dependencies
       compile_jars += [j.ijar for j in target.java.outputs.jars]
       # Replace macros in our dependencies with their runtime versions
-      compile_jars += _replace_macro_libs(target.java.transitive_deps, rjars)
+      if ctx.attr.disable_ijars:
+        compile_jars += rjars
+      else:
+        compile_jars += _replace_macro_libs(target.java.transitive_deps, rjars)
       found = True
     if not found:
       # support http_file pointed at a jar. http_jar uses ijar, which breaks scala macros
@@ -329,20 +332,20 @@ def _replace_macro_libs(compile_deps, runtime_deps):
   return list(filtered_compile_deps + replacement_deps)
 
 def _lib(ctx, non_macro_lib, usezinc):
-  jars = _collect_jars(ctx.attr.deps)
+  jars = _collect_jars(ctx, ctx.attr.deps)
   (cjars, rjars) = (jars.compiletime, jars.runtime)
   _write_manifest(ctx)
   outputs = _compile_or_empty(ctx, cjars, non_macro_lib, usezinc)
 
   rjars += [ctx.outputs.jar]
-  rjars += _collect_jars(ctx.attr.runtime_deps).runtime
+  rjars += _collect_jars(ctx, ctx.attr.runtime_deps).runtime
 
   if not non_macro_lib:
     #  macros need the scala reflect jar
     cjars += [ctx.file._scalareflect]
     rjars += [ctx.file._scalareflect]
 
-  texp = _collect_jars(ctx.attr.exports)
+  texp = _collect_jars(ctx, ctx.attr.exports)
   scalaattr = struct(outputs = outputs,
                      transitive_runtime_deps = rjars,
                      transitive_compile_exports = texp.compiletime,
@@ -377,22 +380,22 @@ def _scala_binary_common(ctx, cjars, rjars):
       runfiles=runfiles)
 
 def _scala_binary_impl(ctx):
-  jars = _collect_jars(ctx.attr.deps)
+  jars = _collect_jars(ctx, ctx.attr.deps)
   (cjars, rjars) = (jars.compiletime, jars.runtime)
   cjars += [ctx.file._scalareflect]
   rjars += [ctx.outputs.jar, ctx.file._scalalib, ctx.file._scalareflect]
-  rjars += _collect_jars(ctx.attr.runtime_deps).runtime
+  rjars += _collect_jars(ctx, ctx.attr.runtime_deps).runtime
   _write_launcher(ctx, rjars)
   return _scala_binary_common(ctx, cjars, rjars)
 
 def _scala_test_impl(ctx):
-  jars = _collect_jars(ctx.attr.deps)
+  jars = _collect_jars(ctx, ctx.attr.deps)
   (cjars, rjars) = (jars.compiletime, jars.runtime)
   # cjars += [ctx.file._scalareflect, ctx.file._scalatest, ctx.file._scalaxml]
   cjars += [ctx.file._scalareflect, ctx.file._scalaxml]
   # rjars += [ctx.outputs.jar, ctx.file._scalalib, ctx.file._scalareflect, ctx.file._scalatest, ctx.file._scalaxml]
   rjars += [ctx.outputs.jar, ctx.file._scalalib, ctx.file._scalareflect, ctx.file._scalaxml]
-  rjars += _collect_jars(ctx.attr.runtime_deps).runtime
+  rjars += _collect_jars(ctx, ctx.attr.runtime_deps).runtime
   _write_test_launcher(ctx, rjars)
   return _scala_binary_common(ctx, cjars, rjars)
 
@@ -418,6 +421,7 @@ _common_attrs = {
   "resources": attr.label_list(allow_files=True),
   "scalacopts":attr.string_list(),
   "jvm_flags": attr.string_list(),
+  "disable_ijars": attr.bool(default=False),
 }
 
 _zinc_compile_attrs = {
