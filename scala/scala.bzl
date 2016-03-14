@@ -297,7 +297,8 @@ def _collect_jars(ctx, targets):
       else:
         compile_jars += [target.scala.outputs.ijar]
         # Replace macros in our dependencies with their runtime versions
-        compile_jars += _replace_macro_libs(ctx, target.scala.transitive_compile_exports, rjars)
+        if not ctx.attr.disable_transitive_scala:
+          compile_jars += _replace_macro_libs(ctx, target.scala.transitive_compile_exports, rjars)
       found = True
     if hasattr(target, "java"):
       rjars = target.java.transitive_runtime_deps
@@ -309,10 +310,11 @@ def _collect_jars(ctx, targets):
         # Grab interface jars as compile dependencies
         compile_jars += _replace_macro_outputs(ctx, target.java)
         # Replace macros in our dependencies with their runtime versions
-        if ctx.attr.disable_ijars:
-          compile_jars += rjars
-        else:
-          compile_jars += _replace_macro_libs(ctx, target.java.transitive_deps, rjars)
+        if not ctx.attr.disable_transitive_java:
+          if ctx.attr.disable_ijars:
+            compile_jars += rjars
+          else:
+            compile_jars += _replace_macro_libs(ctx, target.java.transitive_deps, rjars)
       found = True
     if not found:
       # support http_file pointed at a jar. http_jar uses ijar, which breaks scala macros
@@ -459,7 +461,9 @@ _common_attrs = {
   "disable_ijars": attr.bool(default=False),
   "scala_runtime_jars": attr.bool(default=False),
   "java_runtime_jars": attr.bool(default=False),
-  "no_ijar": attr.string_list(default=[])
+  "no_ijar": attr.string_list(default=[]),
+  "disable_transitive_scala": attr.bool(default=False),
+  "disable_transitive_java": attr.bool(default=False),
 }
 
 _zinc_compile_attrs = {
