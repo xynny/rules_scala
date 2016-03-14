@@ -316,9 +316,9 @@ def _replace_macro_outputs(java_target):
       if macro_name in jar.ijar.path:
         found_macro = True
     if found_macro:
-      collected_jars += jar.class_jar
+      collected_jars += [jar.class_jar]
     else:
-      collected_jars += jar.ijar
+      collected_jars += [jar.ijar]
   return list(collected_jars)
 
 def _replace_macro_libs(ctx, compile_deps, runtime_deps):
