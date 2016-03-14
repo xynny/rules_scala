@@ -304,11 +304,6 @@ def _collect_jars(ctx, targets):
       # Grab the real (non ijar) transitive dependencies for runtime
       runtime_jars += target.java.transitive_runtime_deps
       compile_jars += target.java.transitive_runtime_deps
-
-      print("===============================")
-      print(ctx.label)
-      print(compile_jars)
-
       found = True
     if not found:
       # support http_file pointed at a jar. http_jar uses ijar, which breaks scala macros
@@ -322,6 +317,9 @@ def _split_macro_libs(jars):
 def _lib(ctx, non_macro_lib, usezinc):
   jars = _collect_jars(ctx, ctx.attr.deps)
   (cjars, rjars) = (jars.compiletime, jars.runtime)
+  print("===============================")
+  print(ctx.label)
+  print(cjars)
   _write_manifest(ctx)
   outputs = _compile_or_empty(ctx, cjars, non_macro_lib, usezinc)
 
