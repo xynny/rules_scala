@@ -301,7 +301,7 @@ def _collect_jars(ctx, targets):
         compile_jars += rjars
       else:
         # Grab interface jars as compile dependencies
-        compile_jars += _replace_macro_outputs(target.java)
+        compile_jars += _replace_macro_outputs(ctx, target.java)
         # Replace macros in our dependencies with their runtime versions
         if ctx.attr.disable_ijars:
           compile_jars += rjars
@@ -323,11 +323,11 @@ def _collect_jars(ctx, targets):
 
   return struct(compiletime = compile_jars, runtime = runtime_jars)
 
-def _replace_macro_outputs(java_target):
+def _replace_macro_outputs(ctx, java_target):
   collected_jars = set()
   for jar in java_target.outputs.jars:
     found_macro = False
-    for macro_name in _KNOWN_MACROS:
+    for macro_name in set(ctx.no_ijar + _KNOWN_MACROS):
       if macro_name in jar.ijar.path:
         found_macro = True
     if found_macro:
@@ -344,7 +344,7 @@ def _replace_macro_libs(ctx, compile_deps, runtime_deps):
   # Filter out ijars of dependencies that are macros
   for dep in compile_deps:
     dep_is_macro = False
-    for macro_name in _KNOWN_MACROS:
+    for macro_name in set(ctx.no_ijar + _KNOWN_MACROS):
       if macro_name in dep.path:
         dep_is_macro = True
         found_macros += [macro_name]
@@ -451,6 +451,7 @@ _common_attrs = {
   "jvm_flags": attr.string_list(),
   "disable_ijars": attr.bool(default=False),
   "compile_with_runtime_jars": attr.bool(default=False),
+  "no_ijar": attr.string_list(default=[])
 }
 
 _zinc_compile_attrs = {
