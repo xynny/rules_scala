@@ -166,6 +166,8 @@ object ScalaWorker {
               out = ps,
               err = ps
             )
+            System.out.println("INPUTS")
+            request.getInputsList().asScala.foreach(p => System.out.println(p))
           } catch {
             case e: Exception =>
               // We use System.out.println as not to accidentally write to real stdout
