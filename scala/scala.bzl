@@ -284,29 +284,47 @@ def _collect_jars(ctx, targets):
     found = False
     if hasattr(target, "scala"):
       rjars = target.scala.transitive_runtime_deps + target.scala.transitive_runtime_exports
+      cjars = set()
+
+      cjars += [target.scala.outputs.ijar]
+      # Replace macros in our dependencies with their runtime versions
+      cjars += _replace_macro_libs(ctx, target.scala.transitive_compile_exports, rjars)
+
       runtime_jars += rjars
 
       if ctx.attr.compile_with_runtime_jars:
         compile_jars += rjars
       else:
-        compile_jars += [target.scala.outputs.ijar]
-        # Replace macros in our dependencies with their runtime versions
-        compile_jars += _replace_macro_libs(ctx, target.scala.transitive_compile_exports, rjars)
+        compile_jars += cjars
+
+      if ctx.attr.compile_with_runtime_jars:
+        print("%s: Runtime %s", % (ctx.label, rjars))
+        print("%s: Compiletime %s", % (ctx.label, cjars))
+
       found = True
     if hasattr(target, "java"):
       rjars = target.java.transitive_runtime_deps
+      cjars = set()
+
+      # Grab interface jars as compile dependencies
+      cjars += _replace_macro_outputs(target.java)
+      # Replace macros in our dependencies with their runtime versions
+      if ctx.attr.disable_ijars:
+        cjars += rjars
+      else:
+        cjars += _replace_macro_libs(ctx, target.java.transitive_deps, rjars)
+
       runtime_jars += rjars
 
       if ctx.attr.compile_with_runtime_jars:
         compile_jars += rjars
       else:
-        # Grab interface jars as compile dependencies
-        compile_jars += _replace_macro_outputs(target.java)
-        # Replace macros in our dependencies with their runtime versions
-        if ctx.attr.disable_ijars:
-          compile_jars += rjars
-        else:
-          compile_jars += _replace_macro_libs(ctx, target.java.transitive_deps, rjars)
+        compile_jars += cjars
+
+      if ctx.attr.compile_with_runtime_jars:
+        print("%s: Runtime %s", % (ctx.label, rjars))
+        print("%s: Compiletime %s", % (ctx.label, cjars))
+
       found = True
     if not found:
       # support http_file pointed at a jar. http_jar uses ijar, which breaks scala macros
