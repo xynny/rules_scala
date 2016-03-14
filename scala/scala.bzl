@@ -321,7 +321,7 @@ def _replace_macro_libs(ctx, compile_deps, runtime_deps):
         dep_is_macro = True
         found_macros += [macro_name]
     if not dep_is_macro:
-      print("%s: Kept %s", % (ctx.label, dep))
+      print("%s: Kept %s" % (ctx.label, dep))
       filtered_compile_deps += [dep]
     else:
       print("%s: Filtered %s" % (ctx.label, dep))
