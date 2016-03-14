@@ -296,14 +296,14 @@ def _collect_jars(ctx, targets):
         compile_jars += rjars
       else:
         if not ctx.attr.disable_scala_jar:
-          print("Including %s" % target.scala.outputs.jar.path)
+          print("Including %s" % target.scala.outputs.ijar.path)
           compile_jars += [target.scala.outputs.ijar]
         else:
-          if target.scala.outputs.jar.path in ctx.attr.scala_includes:
-            print("Including %s" % target.scala.outputs.jar.path)
+          if target.scala.outputs.ijar.path in ctx.attr.scala_includes:
+            print("Including %s" % target.scala.outputs.ijar.path)
             compile_jars += [target.scala.outputs.ijar]
           else:
-            print("Excluding %s" % target.scala.outputs.jar.path)
+            print("Excluding %s" % target.scala.outputs.ijar.path)
 
 
         # Replace macros in our dependencies with their runtime versions
