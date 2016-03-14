@@ -287,7 +287,8 @@ def _collect_jars(ctx, targets):
       # see JavaSkylarkApiProvider.java, this is just the compile-time deps
       # this should be improved in bazel 0.1.5 to get outputs.ijar
       # compile_jars += [target.java.outputs.ijar]
-      compile_jars += target.java.transitive_deps
+      # compile_jars += target.java.transitive_deps
+      compile_jars += _split_macro_libs(target.java.transitive_deps, target.java.transitive_runtime_deps)
       runtime_jars += target.java.transitive_runtime_deps
       found = True
     if not found:
@@ -296,15 +297,14 @@ def _collect_jars(ctx, targets):
       compile_jars += target.files
   return struct(compiletime = compile_jars, runtime = runtime_jars)
 
-def _split_macro_libs(jars):
-  print(jars[0])
+def _split_macro_libs(compile_deps, runtime_deps):
+  filtered_compile = [f for f in compile_deps if "scalalogging" not in f.path]
+  replacement = [f for f in runtime_deps if "scalalogging" in f.path]
+  return filtered_compile + replacement
 
 def _lib(ctx, non_macro_lib, usezinc):
   jars = _collect_jars(ctx, ctx.attr.deps)
   (cjars, rjars) = (jars.compiletime, jars.runtime)
-  print("===============================")
-  print(ctx.label)
-  print(cjars)
   _write_manifest(ctx)
   outputs = _compile_or_empty(ctx, cjars, non_macro_lib, usezinc)
 
