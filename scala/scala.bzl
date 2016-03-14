@@ -17,6 +17,8 @@
 
 _scala_filetype = FileType([".scala", ".srcjar", ".java"])
 
+_KNOWN_MACROS = ["scalalogging"]
+
 def _adjust_resources_path(path):
   dir_1, dir_2, rel_path = path.partition("resources")
   if rel_path:
@@ -281,17 +283,21 @@ def _collect_jars(targets):
   for target in targets:
     found = False
     if hasattr(target, "scala"):
+      rjars = target.scala.transitive_runtime_deps + target.scala.transitive_runtime_exports
+      runtime_jars += rjars
+
       compile_jars += [target.scala.outputs.ijar]
-      compile_jars += target.scala.transitive_compile_exports
-      runtime_jars += target.scala.transitive_runtime_deps
-      runtime_jars += target.scala.transitive_runtime_exports
+      # Replace macros in our dependencies with their runtime versions
+      compile_jars += _replace_macro_libs(target.scala.transitive_compile_exports, rjars)
       found = True
     if hasattr(target, "java"):
-      # see JavaSkylarkApiProvider.java, this is just the compile-time deps
-      # this should be improved in bazel 0.1.5 to get outputs.ijar
-      # compile_jars += [target.java.outputs.ijar]
-      compile_jars += target.java.transitive_deps
-      runtime_jars += target.java.transitive_runtime_deps
+      rjars = target.java.transitive_runtime_deps
+      runtime_jars += rjars
+
+      # Grab interface jars as compile dependencies
+      compile_jars += [j.ijar for j in target.java.outputs.jars]
+      # Replace macros in our dependencies with their runtime versions
+      compile_jars += _replace_macro_libs(target.java.transitive_deps, rjars)
       found = True
     if not found:
       # support http_file pointed at a jar. http_jar uses ijar, which breaks scala macros
@@ -299,8 +305,28 @@ def _collect_jars(targets):
       compile_jars += target.files
   return struct(compiletime = compile_jars, runtime = runtime_jars)
 
-def _split_macro_libs(jars):
-  print(jars[0])
+def _replace_macro_libs(compile_deps, runtime_deps):
+  found_macros = set()
+  filtered_compile_deps = set()
+  replacement_deps = set()
+
+  # Filter out ijars of dependencies that are macros
+  for dep in compile_deps:
+    dep_is_macro = False
+    for macro_name in _KNOWN_MACROS:
+      if macro in dep.path:
+        dep_is_macro = True
+        found_macros += macro
+    if not dep_is_macro:
+      filtered_compile_deps += dep
+
+  # Replace the filtered dependencies with the non-ijar version
+  for macro in found_macros:
+    for dep in runtime_deps:
+      if macro in dep.path:
+        replacement_deps += dep
+
+  return list(filtered_compile_deps + replacement_deps)
 
 def _lib(ctx, non_macro_lib, usezinc):
   jars = _collect_jars(ctx.attr.deps)
