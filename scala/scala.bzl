@@ -301,8 +301,8 @@ def _collect_jars(ctx, targets):
       runtime_jars += [jar.class_jar for jar in target.java.outputs.jars]
       compile_jars += [jar.class_jar for jar in target.java.outputs.jars]
       # Grab the real (non ijar) transitive dependencies for runtime
-      compile_jars += target.java.transitive_runtime_deps
       runtime_jars += target.java.transitive_runtime_deps
+      compile_jars += [jar.class_jar for jar in target.java.outputs.jars]
 
       found = True
     if not found:
@@ -317,6 +317,9 @@ def _split_macro_libs(jars):
 def _lib(ctx, non_macro_lib, usezinc):
   jars = _collect_jars(ctx, ctx.attr.deps)
   (cjars, rjars) = (jars.compiletime, jars.runtime)
+  # TODO(ahirreddy): Add a flag to enable/disable including transitive dependencies of dependencies
+  # TODO(ahirreddy): This should be the transitive compile time exports, not the runtime exports
+  cjars += _collect_jars(ctx, ctx.attr.deps).compiletime
   _write_manifest(ctx)
   outputs = _compile_or_empty(ctx, cjars, non_macro_lib, usezinc)
 
@@ -330,6 +333,7 @@ def _lib(ctx, non_macro_lib, usezinc):
 
   texp = _collect_jars(ctx, ctx.attr.exports)
   scalaattr = struct(outputs = outputs,
+                     transitive_runtime_deps = rjars,
                      transitive_compile_exports = texp.compiletime,
                      transitive_runtime_exports = texp.runtime
                      )
