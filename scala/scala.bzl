@@ -294,8 +294,8 @@ def _collect_jars(ctx, targets):
       rjars = target.java.transitive_runtime_deps
       runtime_jars += rjars
 
-      # Grab interface jars as compile dependencies, unless they are macros
-      compile_jars += _replace_macro_libs(target.java)
+      # Grab interface jars as compile dependencies
+      compile_jars += _replace_macro_outputs(target.java)
       # Replace macros in our dependencies with their runtime versions
       if ctx.attr.disable_ijars:
         compile_jars += rjars
