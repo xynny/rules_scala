@@ -296,6 +296,7 @@ def _collect_jars(ctx, targets):
         compile_jars += rjars
       else:
         if not ctx.attr.disable_scala_jar:
+          print("alskdjfasf %s" % target.scala.outputs.ijar)
           compile_jars += [target.scala.outputs.ijar]
         # Replace macros in our dependencies with their runtime versions
         if not ctx.attr.disable_transitive_scala:
