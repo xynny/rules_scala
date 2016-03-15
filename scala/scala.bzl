@@ -327,17 +327,6 @@ def _collect_jars(ctx, targets):
       # Only include outputs of rules we depend on
       compile_jars += [j.ijar for j in target.java.outputs.jars]
       compile_jars += target.java.transitive_deps
-
-      if ctx.attr.compile_with_runtime_jars:
-        compile_jars += rjars
-      else:
-        # Grab interface jars as compile dependencies
-        compile_jars += _replace_macro_outputs(target.java)
-        # Replace macros in our dependencies with their runtime versions
-        if ctx.attr.disable_ijars:
-          compile_jars += rjars
-        else:
-          compile_jars += _replace_macro_libs(ctx, target.java.transitive_deps, rjars)
       found = True
     if not found:
       # support http_file pointed at a jar. http_jar uses ijar, which breaks scala macros
