@@ -229,7 +229,8 @@ def _compile(ctx, jars, buildijar, usezinc):
 def _compile_or_empty(ctx, jars, buildijar, usezinc):
   buildijar = buildijar and ctx.attr.emit_ijar
 
-  if buildijar and not ctx.attr.emit_ijar:
+  if not ctx.attr.emit_ijar:
+    print(ctx.label)
     _identity_ijar(ctx)
 
   if len(ctx.files.srcs) == 0:
