@@ -320,8 +320,13 @@ def _collect_jars(ctx, targets):
         compile_jars += _replace_macro_libs(ctx, target.scala.transitive_compile_exports, rjars)
       found = True
     if hasattr(target, "java"):
-      rjars = target.java.transitive_runtime_deps
-      runtime_jars += rjars
+      runtime_jars += [j.class_jar for j in target.java.outputs.jars]
+      runtime_jars += target.java.transitive_runtime_deps
+
+      print(target)
+      # Only include outputs of rules we depend on
+      compile_jars += [j.ijar for j in target.java.outputs.jars]
+      compile_jars += target.java.transitive_deps
 
       if ctx.attr.compile_with_runtime_jars:
         compile_jars += rjars
