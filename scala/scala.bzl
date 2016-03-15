@@ -241,7 +241,7 @@ def _compile_or_empty(ctx, jars, buildijar, usezinc):
       #  macro code needs to be available at compile-time, so set ijar == jar
       ijar = ctx.outputs.jar
     return struct(ijar=ijar, class_jar=ctx.outputs.jar)
-  if buildijar and not ctx.attr.emit_ijar:
+  if not ctx.attr.emit_ijar:
     _identity_ijar(ctx)
 
 
