@@ -229,7 +229,7 @@ def _compile_or_empty(ctx, jars, buildijar, usezinc):
   # We are expected to output an ijar but we need to emit a normal jar
   if buildijar and not ctx.attr.emit_ijar:
     _identity_ijar(ctx)
-    buildijar = false
+    buildijar = False
 
   if len(ctx.files.srcs) == 0:
     _build_nosrc_jar(ctx, buildijar)
