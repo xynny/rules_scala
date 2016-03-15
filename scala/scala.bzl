@@ -309,26 +309,16 @@ def _collect_jars(ctx, targets):
   for target in targets:
     found = False
     if hasattr(target, "scala"):
-      rjars = target.scala.transitive_runtime_deps + target.scala.transitive_runtime_exports
-      runtime_jars += rjars
-
-      if ctx.attr.compile_with_runtime_jars:
-        compile_jars += rjars
-      else:
-        compile_jars += [target.scala.outputs.ijar]
-        # Replace macros in our dependencies with their runtime versions
-        compile_jars += _replace_macro_libs(ctx, target.scala.transitive_compile_exports, rjars)
+      runtime_jars += [target.scala.outputs.class_jar]
+      runtime_jars += target.scala.transitive_runtime_deps
+      # Only include outputs of rules we depend on, no transitive dependencies
+      compile_jars += [target.scala.outputs.ijar]
       found = True
     if hasattr(target, "java"):
       runtime_jars += [j.class_jar for j in target.java.outputs.jars]
       runtime_jars += target.java.transitive_runtime_deps
-
-      print(repr(target))
-      print(type(target))
-      print(target.name)
-      # Only include outputs of rules we depend on
+      # Only include outputs of rules we depend on, no transitive dependencies
       compile_jars += [j.ijar for j in target.java.outputs.jars]
-      compile_jars += target.java.transitive_deps
       found = True
     if not found:
       # support http_file pointed at a jar. http_jar uses ijar, which breaks scala macros
