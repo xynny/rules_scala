@@ -333,7 +333,7 @@ def _swap_ijars(java_target):
   collected_jars = set()
   for dep in java_target.transitive_deps:
     if dep.path.endswith(ijar_suffix):
-      real_jar_path = dep.path[:-len(ijar_suffix)] + ".jar"
+      real_jar_path = dep.path.split("/")[-1][:-len(ijar_suffix)] + ".jar"
       real_jar = [j for j in java_target.transitive_runtime_deps if j.path.endswith(real_jar_path)]
       if len(real_jar) != 1:
         fail("ijar: %s, attempted real jar path: %s" % (dep.path, real_jar_path))
