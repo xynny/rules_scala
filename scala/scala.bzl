@@ -17,7 +17,7 @@
 
 _scala_filetype = FileType([".scala", ".srcjar", ".java"])
 
-_KNOWN_MACROS = ["scalalogging", "docker-client", "jackson-annotations-2.4.0"]
+_KNOWN_MACROS = ["scalalogging", "docker-client", "jackson-annotations-2.4.0", "selenium-macros"]
 
 def _adjust_resources_path(path):
   dir_1, dir_2, rel_path = path.partition("resources")
@@ -227,11 +227,10 @@ def _compile(ctx, jars, buildijar, usezinc):
     _build_ijar(ctx)
 
 def _compile_or_empty(ctx, jars, buildijar, usezinc):
-  buildijar = buildijar and ctx.attr.emit_ijar
-
-  if not ctx.attr.emit_ijar:
-    print(ctx.label)
+  if buildijar and not ctx.attr.emit_ijar:
     _identity_ijar(ctx)
+
+  buildijar = buildijar and ctx.attr.emit_ijar
 
   if len(ctx.files.srcs) == 0:
     _build_nosrc_jar(ctx, buildijar)
