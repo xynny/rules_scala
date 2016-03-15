@@ -476,8 +476,6 @@ _common_attrs = {
   "resources": attr.label_list(allow_files=True),
   "scalacopts":attr.string_list(),
   "jvm_flags": attr.string_list(),
-  "disable_ijars": attr.bool(default=False),
-  "compile_with_runtime_jars": attr.bool(default=False),
   "emit_ijar": attr.bool(default=True),
 }
 
