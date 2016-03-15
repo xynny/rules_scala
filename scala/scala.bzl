@@ -51,7 +51,8 @@ zip -X -q {out} {manifest}
       manifest=ctx.outputs.manifest.path,
       jar=ctx.file._jar.path)
   outs = [ctx.outputs.jar]
-  outs.extend([ctx.outputs.ijar])
+  if buildijar:
+    outs.extend([ctx.outputs.ijar])
   ctx.action(
       inputs=
           ctx.files.resources +
@@ -201,6 +202,20 @@ def _build_ijar(ctx):
     command=ijar_cmd,
     progress_message="scala ijar %s" % ctx.label,)
 
+def _identity_ijar(ctx):
+  ijar_cmd = """
+    set -e
+    cp {out} {ijar_out}
+  """.format(
+    out=ctx.outputs.jar.path,
+    ijar_out=ctx.outputs.ijar.path)
+
+  ctx.action(
+    inputs=[ctx.outputs.jar],
+    outputs=[ctx.outputs.ijar],
+    command=ijar_cmd,
+    progress_message="scala ijar %s" % ctx.label,)
+
 
 def _compile(ctx, jars, buildijar, usezinc):
   if usezinc:
@@ -208,9 +223,11 @@ def _compile(ctx, jars, buildijar, usezinc):
   else:
     _compile_scalac(ctx, jars)
 
-  _build_ijar(ctx)
+  if buildijar:
+    _build_ijar(ctx)
 
 def _compile_or_empty(ctx, jars, buildijar, usezinc):
+  buildijar = buildijar and ctx.attr.emit_ijar
   if len(ctx.files.srcs) == 0:
     _build_nosrc_jar(ctx, buildijar)
     #  no need to build ijar when empty
@@ -224,6 +241,9 @@ def _compile_or_empty(ctx, jars, buildijar, usezinc):
       #  macro code needs to be available at compile-time, so set ijar == jar
       ijar = ctx.outputs.jar
     return struct(ijar=ijar, class_jar=ctx.outputs.jar)
+  if buildijar and not ctx.attr.emit_ijar:
+    _identity_ijar(ctx)
+
 
 def _write_manifest(ctx):
   # TODO(bazel-team): I don't think this classpath is what you want
@@ -382,7 +402,7 @@ def _lib(ctx, non_macro_lib, usezinc):
       print(j.path)
 
   _write_manifest(ctx)
-  outputs = _compile_or_empty(ctx, cjars, non_macro_lib and ctx.attr.emit_ijar, usezinc)
+  outputs = _compile_or_empty(ctx, cjars, non_macro_lib, usezinc)
 
   rjars += [ctx.outputs.jar]
   rjars += _collect_jars(ctx, ctx.attr.runtime_deps).runtime
