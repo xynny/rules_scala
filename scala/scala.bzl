@@ -202,6 +202,19 @@ def _build_ijar(ctx):
     command=ijar_cmd,
     progress_message="scala ijar %s" % ctx.label,)
 
+def _identity_ijar(ctx):
+  ijar_cmd = """
+    set -e
+    cp {out} {ijar_out}
+  """.format(
+    out=ctx.outputs.jar.path,
+    ijar_out=ctx.outputs.ijar.path)
+
+  ctx.action(
+    inputs=[ctx.outputs.jar],
+    outputs=[ctx.outputs.ijar],
+    command=ijar_cmd,
+    progress_message="scala ijar %s" % ctx.label,)
 
 def _compile(ctx, jars, buildijar, usezinc):
   if usezinc:
@@ -213,6 +226,11 @@ def _compile(ctx, jars, buildijar, usezinc):
     _build_ijar(ctx)
 
 def _compile_or_empty(ctx, jars, buildijar, usezinc):
+  # We are expected to output an ijar but we need to emit a normal jar
+  if buildijar and not ctx.attr.emit_ijar:
+    _identity_ijar(ctx)
+    buildijar = false
+
   if len(ctx.files.srcs) == 0:
     _build_nosrc_jar(ctx, buildijar)
     #  no need to build ijar when empty
@@ -442,6 +460,7 @@ _common_attrs = {
   "jvm_flags": attr.string_list(),
   "disable_ijars": attr.bool(default=False),
   "compile_with_runtime_jars": attr.bool(default=False),
+  "emit_ijar": attr.bool(default=False),
 }
 
 _zinc_compile_attrs = {
