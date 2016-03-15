@@ -331,7 +331,6 @@ def _collect_jars(ctx, targets):
 def _swap_ijars(java_target):
   ijar_suffix = "-ijar.jar"
   collected_jars = set()
-  paths = [j.path for j in ]
   for dep in java_target.transitive_deps:
     if dep.path.endswith(ijar_suffix):
       real_jar_path = dep.path[:len(ijar_suffix)] + ".jar"
