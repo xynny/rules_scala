@@ -17,7 +17,7 @@
 
 _scala_filetype = FileType([".scala", ".srcjar", ".java"])
 
-_KNOWN_MACROS = ["scalalogging", "docker-client", "jackson-annotations-2.4.0"]
+_KNOWN_MACROS = ["scalalogging", "docker-client", "jackson-annotations-2.4.0", "spark-core_2.10-1.4-9c254ab12a211350b88fa69c3b3b2c1c92a32f8b"]
 
 def _adjust_resources_path(path):
   dir_1, dir_2, rel_path = path.partition("resources")
