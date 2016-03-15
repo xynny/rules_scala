@@ -51,8 +51,7 @@ zip -X -q {out} {manifest}
       manifest=ctx.outputs.manifest.path,
       jar=ctx.file._jar.path)
   outs = [ctx.outputs.jar]
-  if buildijar:
-    outs.extend([ctx.outputs.ijar])
+  outs.extend([ctx.outputs.ijar])
   ctx.action(
       inputs=
           ctx.files.resources +
