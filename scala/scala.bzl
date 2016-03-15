@@ -460,7 +460,7 @@ _common_attrs = {
   "jvm_flags": attr.string_list(),
   "disable_ijars": attr.bool(default=False),
   "compile_with_runtime_jars": attr.bool(default=False),
-  "emit_ijar": attr.bool(default=False),
+  "emit_ijar": attr.bool(default=True),
 }
 
 _zinc_compile_attrs = {
