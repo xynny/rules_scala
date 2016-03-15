@@ -228,6 +228,10 @@ def _compile(ctx, jars, buildijar, usezinc):
 
 def _compile_or_empty(ctx, jars, buildijar, usezinc):
   buildijar = buildijar and ctx.attr.emit_ijar
+
+  if buildijar and not ctx.attr.emit_ijar:
+    _identity_ijar(ctx)
+
   if len(ctx.files.srcs) == 0:
     _build_nosrc_jar(ctx, buildijar)
     #  no need to build ijar when empty
@@ -241,10 +245,6 @@ def _compile_or_empty(ctx, jars, buildijar, usezinc):
       #  macro code needs to be available at compile-time, so set ijar == jar
       ijar = ctx.outputs.jar
     return struct(ijar=ijar, class_jar=ctx.outputs.jar)
-  print("%s %s" % (ctx.label.name, ctx.attr.emit_ijar))
-  if not ctx.attr.emit_ijar:
-    print("askdlfj")
-    _identity_ijar(ctx)
 
 
 def _write_manifest(ctx):
