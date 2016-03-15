@@ -323,6 +323,7 @@ def _collect_jars(ctx, targets):
       runtime_jars += [j.class_jar for j in target.java.outputs.jars]
       runtime_jars += target.java.transitive_runtime_deps
 
+      print(repr(target))
       print(type(target))
       print(target.name)
       # Only include outputs of rules we depend on
