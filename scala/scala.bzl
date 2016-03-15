@@ -320,7 +320,7 @@ def _collect_jars(ctx, targets):
 
       # Only include outputs of rules we depend on, no transitive dependencies
       compile_jars += [j.ijar for j in target.java.outputs.jars]
-      compile_jars += _swap_ijars(target.java)
+      compile_jars += _collect_real_jars(target.java)
       found = True
     if not found:
       # support http_file pointed at a jar. http_jar uses ijar, which breaks scala macros
@@ -328,7 +328,14 @@ def _collect_jars(ctx, targets):
       compile_jars += target.files
   return struct(compiletime = compile_jars, runtime = runtime_jars)
 
-def _swap_ijars(java_target):
+def _collect_real_jars(java_target):
+  """
+    Given a java target, return the non-ijar (real classes) compile time dependencies.
+
+    A java_import rules will only give us ijars as the transitive_deps. This method will extract the
+    name of the dependency and find the real jar in the runtime_deps. We cannot simply pull in the
+    runtime deps, since it includes unwanted transitive dependencies.
+  """
   ijar_suffix = "-ijar.jar"
   collected_jars = set()
   for dep in java_target.transitive_deps:
