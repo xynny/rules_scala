@@ -320,6 +320,7 @@ def _collect_jars(ctx, targets):
 
       # Only include outputs of rules we depend on, no transitive dependencies
       compile_jars += [j.ijar for j in target.java.outputs.jars]
+      compile_jars += target.java.transitive_runtime_deps
       _swap_ijars(target.java)
       found = True
     if not found:
