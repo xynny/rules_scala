@@ -242,6 +242,7 @@ def _compile_or_empty(ctx, jars, buildijar, usezinc):
       ijar = ctx.outputs.jar
     return struct(ijar=ijar, class_jar=ctx.outputs.jar)
   if not ctx.attr.emit_ijar:
+    print("askdlfj")
     _identity_ijar(ctx)
 
 
