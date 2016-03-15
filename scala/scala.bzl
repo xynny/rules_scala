@@ -384,7 +384,7 @@ def _lib(ctx, non_macro_lib, usezinc):
       print(j.path)
 
   _write_manifest(ctx)
-  outputs = _compile_or_empty(ctx, cjars, non_macro_lib, usezinc)
+  outputs = _compile_or_empty(ctx, cjars, non_macro_lib and ctx.attr.emit_ijar, usezinc)
 
   rjars += [ctx.outputs.jar]
   rjars += _collect_jars(ctx, ctx.attr.runtime_deps).runtime
@@ -479,6 +479,7 @@ _common_attrs = {
   "disable_scala_jar": attr.bool(default=False),
   "scala_includes": attr.string_list(default=[]),
   "scala_deploy_includes": attr.string_list(default=[]),
+  "emit_ijar": attr.bool(default=True),
 }
 
 _zinc_compile_attrs = {
