@@ -91,7 +91,7 @@ mv {out}_tmp/out.jar {out}
   cmd = cmd.format(
       scalac=ctx.file._scalac.path,
       scala_opts=" ".join(ctx.attr.scalacopts),
-      jvm_flags=" ".join(["-J" + flag for flag in ctx.attr.jvm_flags]),
+      jvm_flags=" ".join([flag for flag in ctx.attr.jvm_flags]),
       out=ctx.outputs.jar.path,
       manifest=ctx.outputs.manifest.path,
       jar=ctx.file._jar.path,
@@ -272,7 +272,7 @@ def _write_launcher(ctx, jars):
       java=ctx.file._java.path,
       name=ctx.attr.main_class,
       deploy_jar=ctx.outputs.jar.path,
-      jvm_flags=" ".join(["-J" + flag for flag in ctx.attr.jvm_flags]),
+      jvm_flags=" ".join([flag for flag in ctx.attr.jvm_flags]),
       jars=":".join(["$0.runfiles/" + jar.short_path for jar in jars]))
 
   ctx.file_action(
