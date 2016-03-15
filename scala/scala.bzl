@@ -209,17 +209,7 @@ def _compile(ctx, jars, buildijar, usezinc):
   else:
     _compile_scalac(ctx, jars)
 
-  if buildijar:
-    _build_ijar(ctx)
-  else:
-    ctx.action(
-      inputs=[ctx.outputs.jar],
-      outputs=[ctx.outputs.ijar],
-      command="cp {jar} {ijar}".format(
-        jar = ctx.outputs.jar.path,
-        ijar = ctx.outputs.ijar.path
-      )
-    )
+  _build_ijar(ctx)
 
 def _compile_or_empty(ctx, jars, buildijar, usezinc):
   if len(ctx.files.srcs) == 0:
