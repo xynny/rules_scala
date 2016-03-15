@@ -320,8 +320,7 @@ def _collect_jars(ctx, targets):
 
       # Only include outputs of rules we depend on, no transitive dependencies
       compile_jars += [j.ijar for j in target.java.outputs.jars]
-      compile_jars += target.java.transitive_runtime_deps
-      _swap_ijars(target.java)
+      compile_jars += _swap_ijars(target.java)
       found = True
     if not found:
       # support http_file pointed at a jar. http_jar uses ijar, which breaks scala macros
@@ -330,9 +329,20 @@ def _collect_jars(ctx, targets):
   return struct(compiletime = compile_jars, runtime = runtime_jars)
 
 def _swap_ijars(java_target):
-  paths = [j.path for j in java_target.transitive_deps]
-  for p in paths:
-      print(p)
+  ijar_suffix = "-ijar.jar"
+  collected_jars = set()
+  paths = [j.path for j in ]
+  for dep in java_target.transitive_deps:
+    if dep.path.endswith(ijar_suffix):
+      real_jar_path = dep.path[:len(ijar_suffix)] + ".jar"
+      real_jar = [j for j in java_target.transitive_runtime_deps if j.path.endswith(real_jar_path)]
+      if len(real_jar) is not 1:
+        fail("ijar: %s, attempted real jar path: %s" % (dep.path, real_jar_path))
+      else:
+        collected_jars += real_jar
+    else:
+      collected_jars += dep
+  return collected_jars
 
 def _replace_macro_outputs(java_target):
   collected_jars = set()
