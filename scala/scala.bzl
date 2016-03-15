@@ -332,7 +332,7 @@ def _collect_jars(ctx, targets):
 def _swap_ijars(java_target):
   paths = [j.path for j in java_target.transitive_deps]
   for p in paths:
-      print p
+      print(p)
 
 def _replace_macro_outputs(java_target):
   collected_jars = set()
