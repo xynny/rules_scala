@@ -17,7 +17,7 @@
 
 _scala_filetype = FileType([".scala", ".srcjar", ".java"])
 
-_KNOWN_MACROS = ["scalalogging", "docker-client", "jackson-annotations-2.4.0", "selenium-macros"]
+_KNOWN_MACROS = ["scalalogging", "docker-client", "jackson-annotations-2.4.0"]
 
 def _adjust_resources_path(path):
   dir_1, dir_2, rel_path = path.partition("resources")
@@ -202,20 +202,6 @@ def _build_ijar(ctx):
     command=ijar_cmd,
     progress_message="scala ijar %s" % ctx.label,)
 
-def _identity_ijar(ctx):
-  ijar_cmd = """
-    set -e
-    cp {out} {ijar_out}
-  """.format(
-    out=ctx.outputs.jar.path,
-    ijar_out=ctx.outputs.ijar.path)
-
-  ctx.action(
-    inputs=[ctx.outputs.jar],
-    outputs=[ctx.outputs.ijar],
-    command=ijar_cmd,
-    progress_message="scala ijar %s" % ctx.label,)
-
 
 def _compile(ctx, jars, buildijar, usezinc):
   if usezinc:
@@ -227,11 +213,6 @@ def _compile(ctx, jars, buildijar, usezinc):
     _build_ijar(ctx)
 
 def _compile_or_empty(ctx, jars, buildijar, usezinc):
-  if buildijar and not ctx.attr.emit_ijar:
-    _identity_ijar(ctx)
-
-  buildijar = buildijar and ctx.attr.emit_ijar
-
   if len(ctx.files.srcs) == 0:
     _build_nosrc_jar(ctx, buildijar)
     #  no need to build ijar when empty
@@ -245,7 +226,6 @@ def _compile_or_empty(ctx, jars, buildijar, usezinc):
       #  macro code needs to be available at compile-time, so set ijar == jar
       ijar = ctx.outputs.jar
     return struct(ijar=ijar, class_jar=ctx.outputs.jar)
-
 
 def _write_manifest(ctx):
   # TODO(bazel-team): I don't think this classpath is what you want
@@ -300,66 +280,45 @@ def _collect_jars(ctx, targets):
   """Compute the runtime and compile-time dependencies from the given targets"""
   compile_jars = set()  # not transitive
   runtime_jars = set()  # this is transitive
-  evil1 = set()
-  evil2 = set()
   for target in targets:
     found = False
     if hasattr(target, "scala"):
       rjars = target.scala.transitive_runtime_deps + target.scala.transitive_runtime_exports
       runtime_jars += rjars
 
-      if ctx.attr.scala_runtime_jars:
-        evil1 += rjars
-        evil2 += [target.scala.outputs.ijar]
-        evil2 += _replace_macro_libs(ctx, target.scala.transitive_compile_exports, rjars)
-
+      if ctx.attr.compile_with_runtime_jars:
         compile_jars += rjars
       else:
-        path = target.scala.outputs.ijar.path
-        if ctx.attr.disable_scala_jar and path not in ctx.attr.scala_includes:
-          print("%s, Excluding %s" % (ctx.label.name, path))
-        else:
-          print("%s, Including %s" % (ctx.label.name, path))
-          compile_jars += [target.scala.outputs.ijar]
-
-        for include in ctx.attr.scala_deploy_includes:
-          for j in rjars:
-            if include in j.path:
-              print("%s, Deploy Jar %s" % (ctx.label.name, j.path))
-              compile_jars += [j]
-
+        compile_jars += [target.scala.outputs.ijar]
         # Replace macros in our dependencies with their runtime versions
-        if not ctx.attr.disable_transitive_scala:
-          compile_jars += _replace_macro_libs(ctx, target.scala.transitive_compile_exports, rjars)
+        compile_jars += _replace_macro_libs(ctx, target.scala.transitive_compile_exports, rjars)
       found = True
     if hasattr(target, "java"):
       rjars = target.java.transitive_runtime_deps
       runtime_jars += rjars
 
-      if ctx.attr.java_runtime_jars:
+      if ctx.attr.compile_with_runtime_jars:
         compile_jars += rjars
       else:
         # Grab interface jars as compile dependencies
-        compile_jars += _replace_macro_outputs(ctx, target.java)
+        compile_jars += _replace_macro_outputs(target.java)
         # Replace macros in our dependencies with their runtime versions
-        if not ctx.attr.disable_transitive_java:
-          if ctx.attr.disable_ijars:
-            compile_jars += rjars
-          else:
-            compile_jars += _replace_macro_libs(ctx, target.java.transitive_deps, rjars)
+        if ctx.attr.disable_ijars:
+          compile_jars += rjars
+        else:
+          compile_jars += _replace_macro_libs(ctx, target.java.transitive_deps, rjars)
       found = True
     if not found:
       # support http_file pointed at a jar. http_jar uses ijar, which breaks scala macros
       runtime_jars += target.files
       compile_jars += target.files
+  return struct(compiletime = compile_jars, runtime = runtime_jars)
 
-  return struct(compiletime = compile_jars, runtime = runtime_jars, evil1 = evil1, evil2 = evil2)
-
-def _replace_macro_outputs(ctx, java_target):
+def _replace_macro_outputs(java_target):
   collected_jars = set()
   for jar in java_target.outputs.jars:
     found_macro = False
-    for macro_name in set(ctx.attr.no_ijar + _KNOWN_MACROS):
+    for macro_name in _KNOWN_MACROS:
       if macro_name in jar.ijar.path:
         found_macro = True
     if found_macro:
@@ -376,7 +335,7 @@ def _replace_macro_libs(ctx, compile_deps, runtime_deps):
   # Filter out ijars of dependencies that are macros
   for dep in compile_deps:
     dep_is_macro = False
-    for macro_name in set(ctx.attr.no_ijar + _KNOWN_MACROS):
+    for macro_name in _KNOWN_MACROS:
       if macro_name in dep.path:
         dep_is_macro = True
         found_macros += [macro_name]
@@ -394,15 +353,6 @@ def _replace_macro_libs(ctx, compile_deps, runtime_deps):
 def _lib(ctx, non_macro_lib, usezinc):
   jars = _collect_jars(ctx, ctx.attr.deps)
   (cjars, rjars) = (jars.compiletime, jars.runtime)
-
-  if ctx.label.name.endswith("sync-daemon"):
-    print("%s: Runtime" % ctx.label)
-    for j in sorted(list(set(jars.evil1))):
-      print(j.path)
-    print("%s: Compile" % ctx.label)
-    for j in sorted(list(set(jars.evil2))):
-      print(j.path)
-
   _write_manifest(ctx)
   outputs = _compile_or_empty(ctx, cjars, non_macro_lib, usezinc)
 
@@ -491,15 +441,7 @@ _common_attrs = {
   "scalacopts":attr.string_list(),
   "jvm_flags": attr.string_list(),
   "disable_ijars": attr.bool(default=False),
-  "scala_runtime_jars": attr.bool(default=False),
-  "java_runtime_jars": attr.bool(default=False),
-  "no_ijar": attr.string_list(default=[]),
-  "disable_transitive_scala": attr.bool(default=False),
-  "disable_transitive_java": attr.bool(default=False),
-  "disable_scala_jar": attr.bool(default=False),
-  "scala_includes": attr.string_list(default=[]),
-  "scala_deploy_includes": attr.string_list(default=[]),
-  "emit_ijar": attr.bool(default=True),
+  "compile_with_runtime_jars": attr.bool(default=False),
 }
 
 _zinc_compile_attrs = {
