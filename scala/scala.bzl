@@ -319,10 +319,8 @@ def _collect_jars(ctx, targets):
       runtime_jars += target.java.transitive_runtime_deps
 
       # Only include outputs of rules we depend on, no transitive dependencies
-      # The java rule may not have any outputs, in which case it is None
-      if target.java.outputs.jars:
-        compile_jars += [j.ijar for j in target.java.outputs.jars]
-
+      # The java rule may not have any outputs, in which case j.ijar is None
+      compile_jars += [j.ijar for j in target.java.outputs.jars if j.ijar]
       compile_jars += _collect_real_jars(target.java)
       found = True
     if not found:
