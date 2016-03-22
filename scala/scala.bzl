@@ -348,7 +348,7 @@ def _collect_real_jars(java_target):
       else:
         collected_jars += real_jar
     else:
-      collected_jars += dep
+      collected_jars += [dep]
   return collected_jars
 
 def _replace_macro_outputs(java_target):
