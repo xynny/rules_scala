@@ -528,7 +528,6 @@ scala_worker = rule(
       "exports": attr.label_list(allow_files=False),
       # Worker Args
       "worker": attr.label(
-          cfg=HOST_CFG,
           default=Label("@io_bazel_rules_scala//scala:scala-worker"),
           allow_files=True,
           executable=True),
