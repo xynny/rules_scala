@@ -291,7 +291,7 @@ java -cp {cp} {jvm_flags} {sys_props} {name} {runner_args} {args} "$@"
       args=' '.join(_args_for_suites(ctx.attr.suites)),
       deploy_jar=ctx.outputs.jar.path,
       jvm_flags=" ".join([" " + flag for flag in ctx.attr.jvm_flags]),
-      runner_args=" -u /testresults  -R /databricks/jars "
+      runner_args=" -u /testresults  -R /databricks/jars ",
       sys_props=" ".join(["-D" + p for p in ctx.attr.sys_props]))
 
   ctx.file_action(
