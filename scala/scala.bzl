@@ -266,7 +266,7 @@ def _write_manifest(ctx):
 
 def _write_launcher(ctx, jars):
   content = """#!/bin/bash
-{java} -cp {jars} {jvm_flags} {name} "$@"
+java -cp {jars} {jvm_flags} {name} "$@"
 """
   content = content.format(
       java=ctx.file._java.path,
