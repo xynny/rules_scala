@@ -288,7 +288,7 @@ java -cp {cp} {sys_props} {name} {args} "$@"
       java=ctx.file._java.path,
       cp=":".join([j.short_path for j in jars]),
       name=ctx.attr.main_class,
-      args=' '.join(_args_for_suites(ctx.attr.suites)),
+      args=' -u /testresults -R /databricks/jars -s '.join(_args_for_suites(ctx.attr.suites)),
       deploy_jar=ctx.outputs.jar.path,
       sys_props=" ".join(["-D" + p for p in ctx.attr.sys_props]))
 
