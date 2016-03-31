@@ -272,7 +272,7 @@ def _write_launcher(ctx, jars):
       java=ctx.file._java.path,
       name=ctx.attr.main_class,
       deploy_jar=ctx.outputs.jar.path,
-      jvm_flags=" ".join(["-J" + flag for flag in ctx.attr.jvm_flags]),
+      jvm_flags=" ".join([" " + flag for flag in ctx.attr.jvm_flags]),
       jars=":".join(["$0.runfiles/" + jar.short_path for jar in jars]))
 
   ctx.file_action(
@@ -282,14 +282,16 @@ def _write_launcher(ctx, jars):
 def _write_test_launcher(ctx, jars):
   content = """#!/bin/bash
 export DB_TESTING=true
-java -cp {cp} {sys_props} {name} {args} "$@"
+java -cp {cp} {jvm_flags} {sys_props} {name} {runner_args} {args} "$@"
 """
   content = content.format(
       java=ctx.file._java.path,
       cp=":".join([j.short_path for j in jars]),
       name=ctx.attr.main_class,
-      args=' -u /testresults -R /databricks/jars -s '.join(_args_for_suites(ctx.attr.suites)),
+      args=' '.join(_args_for_suites(ctx.attr.suites)),
       deploy_jar=ctx.outputs.jar.path,
+      jvm_flags=" ".join([" " + flag for flag in ctx.attr.jvm_flags]),
+      runner_args=" -u /testresults  -R /databricks/jars "
       sys_props=" ".join(["-D" + p for p in ctx.attr.sys_props]))
 
   ctx.file_action(
