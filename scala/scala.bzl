@@ -282,7 +282,7 @@ java -cp {jars} {jvm_flags} {name} "$@"
 def _write_test_launcher(ctx, jars):
   content = """#!/bin/bash
 export DB_TESTING=true
-java -cp {cp} {sys_props} {name} {args} "$@"
+java -cp {cp} {sys_props} {name} {runner_args} {args} "$@"
 """
   content = content.format(
       java=ctx.file._java.path,
@@ -290,6 +290,8 @@ java -cp {cp} {sys_props} {name} {args} "$@"
       name=ctx.attr.main_class,
       args=' '.join(_args_for_suites(ctx.attr.suites)),
       deploy_jar=ctx.outputs.jar.path,
+      jvm_flags=" ".join([" " + flag for flag in ctx.attr.jvm_flags]),
+      runner_args=" -u /testresults  -R /databricks/jars ",
       sys_props=" ".join(["-D" + p for p in ctx.attr.sys_props]))
 
   ctx.file_action(
