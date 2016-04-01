@@ -595,7 +595,7 @@ scala_test = rule(
   attrs={
       "main_class": attr.string(default="org.scalatest.tools.Runner"),
       "suites": attr.string_list(),
-      # "_scalatest": attr.label(executable=True, default=Label("@scalatest//file"), single_file=True, allow_files=True),
+      "_scalatest": attr.label(executable=True, default=Label("@scalatest//file"), single_file=True, allow_files=True),
       "_java": attr.label(executable=True, default=Label("@bazel_tools//tools/jdk:java"), single_file=True, allow_files=True),
       "sys_props": attr.string_list(),
       "_scalatest_reporter": attr.label(default=Label("//scala/support:test_reporter")),
@@ -694,6 +694,11 @@ def scala_2_10_repositories():
     sha256 = "54adf583dae6734d66328cafa26d9fa03b8c4cf607e27b9f3915f96e9bcd2d67",
     url = "https://downloads.lightbend.com/scala/2.10.6/scala-2.10.6.tgz",
     build_file_content = SCALA_2_10_BUILD_FILE,
+  )
+  native.http_file(
+    name = "scalatest",
+    url = "https://oss.sonatype.org/content/groups/public/org/scalatest/scalatest_2.10/2.2.6/scalatest_2.10-2.2.6.jar",
+    sha256 = "8055d7b536754bf5c19e87428e1cea7ce7ff972f0634d0584289522222aae488",
   )
 
 def zinc_repositories():
