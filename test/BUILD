@@ -14,7 +14,18 @@ java_binary(
 # For now, we have to use a java_import proxy.
 java_import(
     name = "lib_import",
-    jars = [":HelloLib_deploy.jar"],
+    # these are the outputs of the scala_library targets
+    jars = [":HelloLib_deploy.jar",
+            "OtherLib_deploy.jar",
+            "Exported_deploy.jar",
+            "Runtime_deploy.jar",
+           ],
+    runtime_deps = ["org_scala_lang__scala_library", "OtherJavaLib"]
+)
+
+java_import(
+    name = "org_scala_lang__scala_library",
+    jars = ["@scala//:lib/scala-library.jar"]
 )
 
 scala_binary(
@@ -79,7 +90,7 @@ java_library(
 scala_library(
     name = "ScalaLibResources",
     srcs = ["src/main/scala/scala/test/ScalaLibResources.scala"],
-    resources = ["src/main/resources/scala/test/hellos"],
+    resources = ["src/main/resources/scala/test/hellos", "src/main/resources/scala/test/byes"],
 )
 
 scala_binary(
@@ -87,4 +98,9 @@ scala_binary(
     srcs = ["src/main/scala/scala/test/ScalaLibBinary.scala"],
     main_class = "scala.test.ScalaLibBinary",
     deps = ["ScalaLibResources"],
+)
+
+scala_library(
+  name = "jar_export",
+  exports = ["@com_twitter__scalding_date//jar"]
 )

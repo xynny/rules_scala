@@ -5,6 +5,7 @@ addons:
     packages:
       - gcc-4.8
       - g++-4.8
+      - libxml2-utils
       - wget
       # Package list from http://bazel.io/docs/install.html
       - pkg-config
@@ -23,6 +24,4 @@ before_install:
   - cat ~/.bazelrc >> .bazelrc
 
 script:
-  - bazel build test/...
-  - bazel run test:ScalaBinary
-  - bazel test test/...
+  - bash test_run.sh

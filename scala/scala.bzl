@@ -36,12 +36,16 @@ def _adjust_resources_path(path):
     return dir_1 + dir_2, rel_path
   return "", path
 
-def _build_nosrc_jar(ctx, buildijar):
+def _add_resources_cmd(ctx):
   res_cmd = ""
   for f in ctx.files.resources:
     c_dir, res_path = _adjust_resources_path(f.path)
     change_dir = "-C " + c_dir if c_dir else ""
-    res_cmd = "\n{jar} uf {out} " + change_dir + " " + res_path
+    res_cmd += "\n{jar} uf {out} " + change_dir + " " + res_path
+  return res_cmd
+
+def _build_nosrc_jar(ctx, buildijar):
+  res_cmd = _add_resources_cmd(ctx)
   ijar_cmd = ""
   if buildijar:
     ijar_cmd = "\ncp {out} {ijar_out}".format(
@@ -71,11 +75,12 @@ zip -X -q {out} {manifest}
       progress_message="scala %s" % ctx.label,
       arguments=[])
 
+
 def _compile_scalac(ctx, jars):
   cmd = """
 set -e
 mkdir -p {out}_tmp
-{scalac} {scala_opts} {jvm_flags} -classpath "{jars}" $@ -d {out}_tmp
+env JAVACMD={java} {scalac} {scala_opts} {jvm_flags} -classpath "{jars}" $@ -d {out}_tmp
 # Make jar file deterministic by setting the timestamp of files
 find {out}_tmp -exec touch -t 198001010000 {{}} \;
 touch -t 198001010000 {manifest}
@@ -89,6 +94,7 @@ popd
 mv {out}_tmp/out.jar {out}
 """ + _get_res_cmd(ctx)
   cmd = cmd.format(
+      java=ctx.file._java.path,
       scalac=ctx.file._scalac.path,
       scala_opts=" ".join(ctx.attr.scalacopts),
       jvm_flags=" ".join([flag for flag in ctx.attr.jvm_flags]),
@@ -281,8 +287,9 @@ java -cp {jars} {jvm_flags} {name} "$@"
 
 def _write_test_launcher(ctx, jars):
   content = """#!/bin/bash
+
 export DB_TESTING=true
-java -cp {cp} {sys_props} {name} {runner_args} {args} "$@"
+java -cp {cp} {sys_props} {name} {args} -C io.bazel.rules.scala.JUnitXmlReporter "$@"
 """
   content = content.format(
       java=ctx.file._java.path,
@@ -291,7 +298,6 @@ java -cp {cp} {sys_props} {name} {runner_args} {args} "$@"
       args=' '.join(_args_for_suites(ctx.attr.suites)),
       deploy_jar=ctx.outputs.jar.path,
       jvm_flags=" ".join([" " + flag for flag in ctx.attr.jvm_flags]),
-      runner_args=" -u /testresults  -R /databricks/jars ",
       sys_props=" ".join(["-D" + p for p in ctx.attr.sys_props]))
 
   ctx.file_action(
@@ -447,7 +453,9 @@ def _scala_binary_impl(ctx):
   return _scala_binary_common(ctx, cjars, rjars)
 
 def _scala_test_impl(ctx):
-  jars = _collect_jars(ctx, ctx.attr.deps)
+  deps = ctx.attr.deps
+  deps += [ctx.attr._scalatest_reporter]
+  jars = _collect_jars(deps)
   (cjars, rjars) = (jars.compiletime, jars.runtime)
   # cjars += [ctx.file._scalareflect, ctx.file._scalatest, ctx.file._scalaxml]
   cjars += [ctx.file._scalareflect, ctx.file._scalaxml]
@@ -465,6 +473,7 @@ _implicit_deps = {
   "_scalaxml": attr.label(default=Label("@scala//:lib/scala-library.jar"), single_file=True, allow_files=True),
   "_scalasdk": attr.label(default=Label("@scala//:sdk"), allow_files=True),
   "_scalareflect": attr.label(default=Label("@scala//:lib/scala-reflect.jar"), single_file=True, allow_files=True),
+  "_java": attr.label(executable=True, default=Label("@bazel_tools//tools/jdk:java"), single_file=True, allow_files=True),
   "_jar": attr.label(executable=True, default=Label("@bazel_tools//tools/jdk:jar"), single_file=True, allow_files=True),
   "_jdk": attr.label(default=Label("//tools/defaults:jdk"), allow_files=True),
 }
@@ -571,7 +580,6 @@ scala_binary = rule(
   implementation=_scala_binary_impl,
   attrs={
       "main_class": attr.string(mandatory=True),
-      "_java": attr.label(executable=True, default=Label("@bazel_tools//tools/jdk:java"), single_file=True, allow_files=True),
       } + _implicit_deps + _common_attrs,
   outputs={
       "jar": "%{name}_deploy.jar",
@@ -588,6 +596,7 @@ scala_test = rule(
       # "_scalatest": attr.label(executable=True, default=Label("@scalatest//file"), single_file=True, allow_files=True),
       "_java": attr.label(executable=True, default=Label("@bazel_tools//tools/jdk:java"), single_file=True, allow_files=True),
       "sys_props": attr.string_list(),
+      "_scalatest_reporter": attr.label(default=Label("//scala/support:test_reporter")),
       } + _implicit_deps + _common_attrs,
   outputs={
       "jar": "%{name}_deploy.jar",
@@ -596,6 +605,17 @@ scala_test = rule(
   executable=True,
   test=True,
 )
+
+def scala_version():
+  """return the scala version for use in maven coordinates"""
+  return "2.11"
+
+def scala_mvn_artifact(artifact):
+  gav = artifact.split(":")
+  groupid = gav[0]
+  artifactid = gav[1]
+  version = gav[2]
+  return "%s:%s_%s:%s" % (groupid, artifactid, scala_version(), version)
 
 SCALA_BUILD_FILE = """
 # scala.BUILD
@@ -612,7 +632,7 @@ exports_files([
   "lib/scala-continuations-library_2.11-1.0.2.jar",
   "lib/scala-continuations-plugin_2.11.7-1.0.2.jar",
   "lib/scala-library.jar",
-  "lib/scala-parser-comscala-2.11.7/binators_2.11-1.0.4.jar",
+  "lib/scala-parser-combinators_2.11-1.0.4.jar",
   "lib/scala-reflect.jar",
   "lib/scala-swing_2.11-1.0.2.jar",
   "lib/scala-xml_2.11-1.0.4.jar",
