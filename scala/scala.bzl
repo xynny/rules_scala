@@ -80,7 +80,6 @@ def _compile_scalac(ctx, jars):
   cmd = """
 set -e
 mkdir -p {out}_tmp
-{scalac} {scala_opts} {jvm_flags} -classpath "{jars}" $@ -d {out}_tmp
 env JAVACMD={java} {scalac} {scala_opts} {jvm_flags} -classpath "{jars}" $@ -d {out}_tmp
 # Make jar file deterministic by setting the timestamp of files
 find {out}_tmp -exec touch -t 198001010000 {{}} \;
@@ -581,7 +580,6 @@ scala_binary = rule(
   implementation=_scala_binary_impl,
   attrs={
       "main_class": attr.string(mandatory=True),
-      "_java": attr.label(executable=True, default=Label("@bazel_tools//tools/jdk:java"), single_file=True, allow_files=True),
       } + _implicit_deps + _common_attrs,
   outputs={
       "jar": "%{name}_deploy.jar",
@@ -596,7 +594,6 @@ scala_test = rule(
       "main_class": attr.string(default="org.scalatest.tools.Runner"),
       "suites": attr.string_list(),
       "_scalatest": attr.label(executable=True, default=Label("@scalatest//file"), single_file=True, allow_files=True),
-      "_java": attr.label(executable=True, default=Label("@bazel_tools//tools/jdk:java"), single_file=True, allow_files=True),
       "sys_props": attr.string_list(),
       "_scalatest_reporter": attr.label(default=Label("//scala/support:test_reporter")),
       } + _implicit_deps + _common_attrs,
