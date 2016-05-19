@@ -48,7 +48,7 @@ def _build_nosrc_jar(ctx, buildijar):
 set -e
 # Make jar file deterministic by setting the timestamp of files
 touch -t 198001010000 {manifest}
-{jar} cmf {manifest} {out}
+zip -X -q -FS {out} {manifest}
 """ + ijar_cmd + res_cmd
   cmd = cmd.format(
       out=ctx.outputs.jar.path,
@@ -138,7 +138,13 @@ env JAVACMD={java} {scalac} {jvm_flags} @{out}_args/args
 # Make jar file deterministic by setting the timestamp of files
 find {out}_tmp -exec touch -t 198001010000 {{}} \;
 touch -t 198001010000 {manifest}
-{jar} cmf {manifest} {out} -C {out}_tmp .
+echo {manifest} >> filelist.txt
+pushd {out}_tmp
+find . | sort | xargs -n 1 -IREPLACE echo REPLACE >> filelist.txt
+touch -t 198001010000 filelist.txt
+zip -X -q -FS out.jar -@ < filelist.txt
+popd
+mv {out}_tmp/out.jar {out}
 rm -rf {out}_args
 rm -rf {out}_tmp
 rm -rf {out}_tmp_expand_srcjars
@@ -203,12 +209,11 @@ def write_manifest(ctx):
       content = manifest)
 
 def _write_launcher(ctx, jars):
-  classpath = ':'.join(["$0.runfiles/%s/%s" % (ctx.workspace_name, f.short_path) for f in jars])
+  classpath = ':'.join(["$0.runfiles/" + f.short_path for f in jars])
   content = """#!/bin/bash
 export CLASSPATH={classpath}
-$0.runfiles/{repo}/{java} {name} "$@"
+$0.runfiles/{java} {name} "$@"
 """.format(
-    repo=ctx.workspace_name,
     java=ctx.file._java.path,
     name=ctx.attr.main_class,
     deploy_jar=ctx.outputs.jar.path,
